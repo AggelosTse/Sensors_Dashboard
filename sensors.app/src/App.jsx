@@ -1,12 +1,18 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css'
-import {Authentication} from './pages/auth.jsx';
+import {LoginPage} from './pages/login.jsx';
 
 function App() {
- 
-
   return (
-   < Authentication/>
-  )
+  
+      <Router>
+        <Routes>
+          
+          <Route path="/" element={<LoginPage />} />
+        </Routes>
+      </Router>
+   
+  );
 }
 
 export default App
