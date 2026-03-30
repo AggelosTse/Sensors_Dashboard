@@ -6,7 +6,17 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
 
   function handleLogin() {
-    console.log(username, password);
+    fetch("/loginValidation", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        firstParam: username,
+        secondParam: password,
+      }),
+    });
   }
 
   return (
@@ -39,7 +49,7 @@ function Fields({ username, password, setUsername, setPassword }) {
       />{" "}
       <br />
       <input
-        type="text"
+        type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
