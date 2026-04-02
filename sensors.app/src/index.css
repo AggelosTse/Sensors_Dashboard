@@ -1,0 +1,8 @@
+.statusMessageError{
+    color: red;
+    font-weight: bold;
+}
+.statusMessageValid{
+    color: green;
+    font-weight: bold;
+}

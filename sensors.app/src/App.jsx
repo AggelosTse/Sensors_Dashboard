@@ -12,6 +12,7 @@ function App() {
           
           <Route path="/" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/control_panel" element={<SignUpPage />} />
         </Routes>
       </Router>
    

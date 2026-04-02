@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import '../index.css';
 
 export function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -7,6 +9,9 @@ export function SignUpPage() {
   const [fullName, setFullName] = useState("");
 
   const [serverMessage, setMessage] = useState("");
+  const [serverMessageType, setMessageType] = useState("");
+
+  const navig = useNavigate();
 
   async function handleSignUp() {
     const response = await fetch("http://localhost:8001/signUp", {
@@ -19,13 +24,20 @@ export function SignUpPage() {
         username: username,
         password: password,
         email: email,
-        fullName: fullName
+        fullName: fullName,
       }),
     });
 
-    const data = await response.json()
-    if(!response.ok){
-      setMessage(data.message)
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+    } else {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+
+      //redirect to login
+      //navig("/");
     }
   }
 
@@ -37,14 +49,13 @@ export function SignUpPage() {
         setUsername={setUsername}
         password={password}
         setPassword={setPassword}
-        email = {email}
-        setEmail = {setEmail}
-        fullName = {fullName}
-        setFullName = {setFullName}
+        email={email}
+        setEmail={setEmail}
+        fullName={fullName}
+        setFullName={setFullName}
       />
       <SignUpButton onClick={handleSignUp} />
-      <ServerMessage message={serverMessage} />
-
+      <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
@@ -52,7 +63,16 @@ export function SignUpPage() {
 function Logo() {
   return <h1>SIGN UP</h1>;
 }
-function Fields({ username, password, setUsername, setPassword, email,setEmail,fullName,setFullName }) {
+function Fields({
+  username,
+  password,
+  setUsername,
+  setPassword,
+  email,
+  setEmail,
+  fullName,
+  setFullName,
+}) {
   return (
     <div>
       <input
@@ -89,7 +109,14 @@ function SignUpButton({ onClick }) {
   return <button onClick={onClick}>Sign Up</button>;
 }
 
-function ServerMessage({message}){
-  return(
-    <p>{message}</p>
-  )}
+function ServerMessage({ message , messagetype }) {
+  if(!message) return null;
+
+  if (messagetype == "Error") {
+    return <p className="statusMessageError">{message}</p>;
+  }
+  else{
+    return <p className="statusMessageValid">{message}</p>;
+
+  }
+}

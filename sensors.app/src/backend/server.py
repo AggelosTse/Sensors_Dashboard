@@ -50,7 +50,7 @@ def logInvalidate():
     except sqlite3.Error as error:
         return jsonify({
             "messagetype":"Error",
-            "message":"Something went wrong with the database"
+            "message": str(error)
         }),404
     
     finally:
@@ -82,37 +82,37 @@ def signUpmanager():
                 "messagetype": "Error",
                 "message" : "Account with that name already exists"
             }),404
-        
-        cursor.execute('SELECT COUNT(*) FROM users')
-        user_counter = cursor.fetchone()
-        counter = user_counter[0]
-        
-        if counter == 0:
-            role = "admin"
         else:
-            role = "user"
+            cursor.execute('SELECT COUNT(*) FROM users')
+            user_counter = cursor.fetchone()
+            counter = user_counter[0]
+            
+            if counter == 0:
+                role = "admin"
+            else:
+                role = "user"
+                
+                
+            username = data.get("username")
+            password = data.get("password")
+            email = data.get("email")
+            fullName = data.get("fullName")
+            
+            query = '''
+            INSERT INTO users (username, password, email, fullName, role)
+            VALUES (?, ?, ?, ?, ?)'''      
+            
+            cursor.execute(query, (username,password,email,fullName, role))
+            
+            sqlConn.commit()
             
             
-        username = data.get("username")
-        password = data.get("password")
-        email = data.get("email")
-        fullName = data.get("fullName")
+            cursor.close()
         
-        query = '''
-        INSERT INTO users (username, password, email, fullName, role)
-        VALUES (?, ?, ?, ?, ?)'''      
-          
-        cursor.execute(query, (username,password,email,fullName, role))
-        
-        sqlConn.commit()
-        
-        
-        cursor.close()
-        
-        return jsonify({
-            "messagetype": "Valid",
-            "message" : "Account created successfully"
-        }),200
+            return jsonify({
+                "messagetype": "Valid",
+                "message" : "Account created successfully"
+            }),200
          
     except sqlite3.Error as error:
         return jsonify({

@@ -26,6 +26,10 @@ export function LoginPage() {
     if(!response.ok){
       setMessage(data.message)
     }
+    else{
+      setMessage(data.message)
+      //redirect to dashboard main page
+    }
   }
 
   return (
