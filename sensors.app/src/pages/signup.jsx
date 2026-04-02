@@ -6,8 +6,10 @@ export function SignUpPage() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
 
-  function handleSignUp() {
-    fetch("http://localhost:8001/signUp", {
+  const [serverMessage, setMessage] = useState("");
+
+  async function handleSignUp() {
+    const response = await fetch("http://localhost:8001/signUp", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -20,6 +22,11 @@ export function SignUpPage() {
         fullName: fullName
       }),
     });
+
+    const data = await response.json()
+    if(!response.ok){
+      setMessage(data.message)
+    }
   }
 
   return (
@@ -36,6 +43,8 @@ export function SignUpPage() {
         setFullName = {setFullName}
       />
       <SignUpButton onClick={handleSignUp} />
+      <ServerMessage message={serverMessage} />
+
     </div>
   );
 }
@@ -79,3 +88,8 @@ function Fields({ username, password, setUsername, setPassword, email,setEmail,f
 function SignUpButton({ onClick }) {
   return <button onClick={onClick}>Sign Up</button>;
 }
+
+function ServerMessage({message}){
+  return(
+    <p>{message}</p>
+  )}

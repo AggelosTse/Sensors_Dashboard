@@ -5,8 +5,11 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  function handleLogin() {
-    fetch("http://localhost:8001/loginValidation", {
+  const [serverMessage, setMessage] = useState("");
+
+
+  async function handleLogin() {
+      const response = await fetch("http://localhost:8001/loginValidation", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -17,6 +20,12 @@ export function LoginPage() {
         password: password,
       }),
     });
+
+    const data = await response.json();
+
+    if(!response.ok){
+      setMessage(data.message)
+    }
   }
 
   return (
@@ -31,6 +40,8 @@ export function LoginPage() {
 
       <TextForSignup />
       <LoginButton onClick={handleLogin} />
+      <ServerMessage message={serverMessage} />
+
     </div>
   );
 }
@@ -70,4 +81,11 @@ function TextForSignup() {
 
 function LoginButton({ onClick }) {
   return <button onClick={onClick}>Login</button>;
+}
+
+
+function ServerMessage({message}){
+  return(
+    <p>{message}</p>
+  )
 }
