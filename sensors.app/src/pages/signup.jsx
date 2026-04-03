@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import '../index.css';
+import "../index.css";
 
 export function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -11,9 +11,15 @@ export function SignUpPage() {
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
+  const [sending, setSending] = useState(false);
+
   const navig = useNavigate();
 
   async function handleSignUp() {
+    if (sending) return;
+
+    setSending(true);
+
     const response = await fetch("http://localhost:8001/signUp", {
       method: "POST",
       headers: {
@@ -29,15 +35,18 @@ export function SignUpPage() {
     });
 
     const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
-    } else {
+    if (response.ok) {
       setMessage(data.message);
       setMessageType(data.messagetype);
 
-      //redirect to login
-      //navig("/");
+      setTimeout(() => {
+        //navigating to login page after 4 seconds
+        navig("/");
+      }, 4000);
+    } else {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+      setSending(false);
     }
   }
 
@@ -54,7 +63,7 @@ export function SignUpPage() {
         fullName={fullName}
         setFullName={setFullName}
       />
-      <SignUpButton onClick={handleSignUp} />
+      <SignUpButton onClick={handleSignUp} issending={sending} />
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
@@ -105,18 +114,20 @@ function Fields({
     </div>
   );
 }
-function SignUpButton({ onClick }) {
-  return <button onClick={onClick}>Sign Up</button>;
+function SignUpButton({ onClick, issending }) {
+  return (
+    <button onClick={onClick} disabled={issending}>
+      {issending ? "Processing..." : "Sign Up"}
+    </button>
+  );
 }
 
-function ServerMessage({ message , messagetype }) {
-  if(!message) return null;
+function ServerMessage({ message, messagetype }) {
+  if (!message) return null;
 
   if (messagetype == "Error") {
     return <p className="statusMessageError">{message}</p>;
-  }
-  else{
+  } else {
     return <p className="statusMessageValid">{message}</p>;
-
   }
 }
