@@ -59,7 +59,7 @@ export function SignUpPage() {
       setTimeout(() => {
         //navigating to login page after 4 seconds
         setSending(false);
-        navig("/");   //navigate to login
+        navig("/"); //navigate to login
       }, 2200);
     } else {
       setTimeout(() => {
