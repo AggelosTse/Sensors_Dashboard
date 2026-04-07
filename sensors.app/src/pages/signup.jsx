@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../index.css";
 
@@ -11,34 +11,31 @@ export function SignUpPage() {
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
-  const [sending, setSending] = useState(false);  //to prevent spamming button
+  const [sending, setSending] = useState(false); //to prevent spamming button
 
   const navig = useNavigate();
 
   async function handleSignUp() {
-
-    if (sending) return;    //if true, button is already doing a task
+    if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    
-    if(!username.trim() || !password.trim() || !email.trim() || !fullName.trim()){
-
+    if (
+      !username.trim() ||
+      !password.trim() ||
+      !email.trim() ||
+      !fullName.trim()
+    ) {
       setTimeout(() => {
-       
         setMessage("Missing Input");
         setMessageType("Error");
-
       }, 700);
-      
-
 
       setTimeout(() => {
         setSending(false);
       }, 2200);
       return;
     }
-    
 
     const response = await fetch("http://localhost:8001/signUp", {
       method: "POST",
@@ -56,31 +53,23 @@ export function SignUpPage() {
 
     const data = await response.json();
     if (response.ok) {
-
       setMessage(data.message);
       setMessageType(data.messagetype);
 
       setTimeout(() => {
         //navigating to login page after 4 seconds
         setSending(false);
-        navig("/");
+        navig("/");   //navigate to login
       }, 2200);
     } else {
-
       setTimeout(() => {
-       
         setMessage(data.message);
         setMessageType(data.messagetype);
-
       }, 700);
 
       setTimeout(() => {
         setSending(false);
       }, 2200);
-      
-      
-      
-   
     }
   }
 

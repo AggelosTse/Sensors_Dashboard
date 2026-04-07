@@ -4,6 +4,8 @@ import {LoginPage} from './pages/login.jsx';
 
 import {SignUpPage} from './pages/signup.jsx';
 
+import {ControlPanel} from './pages/control_panel.jsx';
+
 function App() {
   return (
   

@@ -8,33 +8,27 @@ export function LoginPage() {
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
-  const [sending, setSending] = useState(false);  //to prevent spamming button
+  const [sending, setSending] = useState(false); //to prevent spamming button
 
   async function handleLogin() {
-
-    if (sending) return;    //if true, button is already doing a task
+    if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    if(!username.trim() || !password.trim()){
-
+    if (!username.trim() || !password.trim()) {
       setTimeout(() => {
-       
         setMessage("Missing Input");
         setMessageType("Error");
-
       }, 700);
 
       setTimeout(() => {
         setSending(false);
       }, 2200);
-      
+
       return;
     }
 
-   
-
-      const response = await fetch("http://localhost:8001/loginValidation", {
+    const response = await fetch("http://localhost:8001/loginValidation", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -48,33 +42,24 @@ export function LoginPage() {
 
     const data = await response.json();
 
-    if(response.ok){
-      setMessage(data.message)
+    if (response.ok) {
+      setMessage(data.message);
       setMessageType(data.messagetype);
 
       setTimeout(() => {
         //navigating to dashboard page after 4 seconds
         setSending(false);
-        navig("/");
+        navig("/control_panel");
       }, 4000);
-    }
-    else{
-
+    } else {
       setTimeout(() => {
-       
         setMessage(data.message);
         setMessageType(data.messagetype);
-
       }, 700);
 
       setTimeout(() => {
         setSending(false);
       }, 2200);
-      
-     
-      
-      
-
     }
   }
 
@@ -88,10 +73,9 @@ export function LoginPage() {
         setPassword={setPassword}
       />
 
-      <TextForSignup issending={sending}/>
+      <TextForSignup issending={sending} />
       <LoginButton onClick={handleLogin} issending={sending} />
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
-
     </div>
   );
 }
@@ -119,11 +103,11 @@ function Fields({ username, password, setUsername, setPassword }) {
   );
 }
 
-function TextForSignup({issending}) {
+function TextForSignup({ issending }) {
   return (
     <div>
       <p>
-      Dont Have an account? 
+        Dont Have an account?
         {issending ? (
           <span style={{ color: "gray", cursor: "not-allowed" }}>Sign up</span>
         ) : (
@@ -142,8 +126,7 @@ function LoginButton({ onClick, issending }) {
   );
 }
 
-
-function ServerMessage({message,messagetype}){
+function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
   if (messagetype == "Error") {
