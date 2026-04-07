@@ -49,7 +49,6 @@ export function LoginPage() {
       setMessageType(data.messagetype);
 
       localStorage.setItem("role", data.role);
-      console.log(`1. ${data.role}`);
 
       setTimeout(() => {
         //navigating to dashboard page after 4 seconds

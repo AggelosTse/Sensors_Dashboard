@@ -4,7 +4,12 @@ import { useNavigate } from "react-router-dom";
 
 export function ControlPanel() {
   const role = localStorage.getItem("role");
-  console.log(`2. ${role}`);
+  
+
+  //fetch data for sensor statistics
+
+
+
   return (
     <div>
       <Boxes />
