@@ -23,13 +23,19 @@ export function SignUpPage() {
 
     
     if(!username.trim() || !password.trim() || !email.trim() || !fullName.trim()){
-      setMessage("Missing Input");
-      setMessageType("Error");
+
+      setTimeout(() => {
+       
+        setMessage("Missing Input");
+        setMessageType("Error");
+
+      }, 700);
+      
 
 
       setTimeout(() => {
         setSending(false);
-      }, 2000);
+      }, 2200);
       return;
     }
     
@@ -50,17 +56,31 @@ export function SignUpPage() {
 
     const data = await response.json();
     if (response.ok) {
+
       setMessage(data.message);
       setMessageType(data.messagetype);
 
       setTimeout(() => {
         //navigating to login page after 4 seconds
+        setSending(false);
         navig("/");
-      }, 4000);
+      }, 2200);
     } else {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
-      setSending(false);
+
+      setTimeout(() => {
+       
+        setMessage(data.message);
+        setMessageType(data.messagetype);
+
+      }, 700);
+
+      setTimeout(() => {
+        setSending(false);
+      }, 2200);
+      
+      
+      
+   
     }
   }
 

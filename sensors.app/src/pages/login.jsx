@@ -17,12 +17,17 @@ export function LoginPage() {
     setSending(true);
 
     if(!username.trim() || !password.trim()){
-      setMessage("Missing Input");
-      setMessageType("Error");
+
+      setTimeout(() => {
+       
+        setMessage("Missing Input");
+        setMessageType("Error");
+
+      }, 700);
 
       setTimeout(() => {
         setSending(false);
-      }, 2000);
+      }, 2200);
       
       return;
     }
@@ -49,13 +54,26 @@ export function LoginPage() {
 
       setTimeout(() => {
         //navigating to dashboard page after 4 seconds
+        setSending(false);
         navig("/");
       }, 4000);
     }
     else{
-      setMessage(data.message);
-      setMessageType(data.messagetype);
-      setSending(false);
+
+      setTimeout(() => {
+       
+        setMessage(data.message);
+        setMessageType(data.messagetype);
+
+      }, 700);
+
+      setTimeout(() => {
+        setSending(false);
+      }, 2200);
+      
+     
+      
+      
 
     }
   }
