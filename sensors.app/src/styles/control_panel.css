@@ -1,0 +1,12 @@
+.boxes{
+    width: 100px;
+    border: 15px solid green;
+    padding: 50px;
+    margin: 20px;
+}
+.boxes-container {
+    display: flex;     
+    gap: 20px;          
+    padding: 20px;
+    justify-content: center; 
+  }
