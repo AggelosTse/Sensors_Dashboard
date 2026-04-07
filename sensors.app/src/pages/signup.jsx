@@ -11,14 +11,28 @@ export function SignUpPage() {
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
-  const [sending, setSending] = useState(false);
+  const [sending, setSending] = useState(false);  //to prevent spamming button
 
   const navig = useNavigate();
 
   async function handleSignUp() {
-    if (sending) return;
+
+    if (sending) return;    //if true, button is already doing a task
 
     setSending(true);
+
+    
+    if(!username.trim() || !password.trim() || !email.trim() || !fullName.trim()){
+      setMessage("Missing Input");
+      setMessageType("Error");
+
+
+      setTimeout(() => {
+        setSending(false);
+      }, 2000);
+      return;
+    }
+    
 
     const response = await fetch("http://localhost:8001/signUp", {
       method: "POST",

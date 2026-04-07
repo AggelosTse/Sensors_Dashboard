@@ -24,6 +24,12 @@ def logInvalidate():
         username = data.get("username")
         password = data.get("password")
         
+        if(not username or not password):
+            return jsonify({
+               "messagetype": "Error",
+               "message": "Missing Input"
+            }),404
+        
         query = 'SELECT password FROM users WHERE username = ?'
 
         cursor.execute(query, (username,))
@@ -63,15 +69,26 @@ def logInvalidate():
 def signUpmanager(): 
     sqlConn = None   
     try:
-        
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        fullName = data.get("fullName")
+            
+        if(not username or not password or not email or not fullName):
+                return jsonify({
+               "messagetype": "Error",
+               "message": "Missing Input"
+            }),404
+                
+                
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
         
         query = 'SELECT username FROM users WHERE username = ?'
         
-        data = request.get_json()
-        username = data.get("username")
-        
+   
+
         cursor.execute(query, (username,))
         
         result = cursor.fetchone()   #afou username kleidi, enas mono tha mporei na to exei
@@ -93,11 +110,7 @@ def signUpmanager():
                 role = "user"
                 
                 
-            username = data.get("username")
-            password = data.get("password")
-            email = data.get("email")
-            fullName = data.get("fullName")
-            
+           
             query = '''
             INSERT INTO users (username, password, email, fullName, role)
             VALUES (?, ?, ?, ?, ?)'''      
