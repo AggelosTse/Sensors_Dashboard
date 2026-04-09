@@ -103,7 +103,7 @@ function Fields({
   email,
   setEmail,
   fullName,
-  setFullName,
+  setFullName
 }) {
   return (
     <div>

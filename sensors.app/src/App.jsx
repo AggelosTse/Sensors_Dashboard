@@ -1,4 +1,5 @@
 import "./App.css";
+import { ProtectedRoute } from "./pages/adminPages/admincheck.jsx";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LoginPage } from "./pages/login.jsx";
 import { SignUpPage } from "./pages/signup.jsx";
@@ -14,9 +15,14 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/control_panel" element={<ControlPanel />} />
-        <Route path="/admin_panel" element={<AdminPanel />} />
-        <Route path="/edit_sensors" element={<EditSensors />} />
-        <Route path="/edit_users" element={<EditUsers />} />
+
+        <Route element={<ProtectedRoute roleAllowed="admin" />}>
+          <Route path="/admin_panel" element={<AdminPanel />} />
+          <Route path="/edit_sensors" element={<EditSensors />} />
+          <Route path="/edit_users" element={<EditUsers />} />
+        </Route>
+          
+          
       </Routes>
     </Router>
   );
