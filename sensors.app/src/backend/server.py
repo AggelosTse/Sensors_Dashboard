@@ -144,5 +144,80 @@ def signUpmanager():
         if sqlConn:
             sqlConn.close()
             
+            
+            
+            
+#ADMIN ENDPOINTS
+
+@app.route('/adduser', methods=['POST'])
+def adUserManager(): 
+    
+    sqlConn = None   
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        fullName = data.get("fullName")
+        role = data.get("role")
+        
+          
+        if(not username or not password or not email or not fullName or not role):
+                return jsonify({
+               "messagetype": "Error",
+               "message": "Missing Input"
+            }),404
+                
+                
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+        
+        query = 'SELECT username FROM users WHERE username = ?'
+        
+   
+
+        cursor.execute(query, (username,))
+        
+        result = cursor.fetchone()   #afou username kleidi, enas mono tha mporei na to exei
+        
+        if result is not None:
+            #username already exists, try another one
+            return jsonify({
+                "messagetype": "Error",
+                "message" : "Account with that name already exists"
+            }),404
+        else:
+            
+            query = '''
+                INSERT INTO users (username, password, email, fullName, role)
+                VALUES (?, ?, ?, ?, ?)'''      
+                
+            cursor.execute(query, (username,password,email,fullName, role))
+                
+            sqlConn.commit()
+                
+                
+            cursor.close()
+            
+            return jsonify({
+                "messagetype": "Valid",
+                "message" : "Account created successfully"
+            }),200
+         
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+    
+    
+    
+                
 if __name__ == '__main__':
     app.run(debug=True, port=8001)

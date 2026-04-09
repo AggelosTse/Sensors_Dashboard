@@ -20,7 +20,7 @@ export function ControlPanel() {
 
 function AdminButton({ userRole }) {
     const navig = useNavigate();
-  if (userRole == "admin") {
+  if (userRole === "admin") {
     return <button 
                 onClick={()=>navig("/admin_panel")}>yo
            </button>;

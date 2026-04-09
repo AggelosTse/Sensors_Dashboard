@@ -7,8 +7,8 @@ export function AdminPanel(){
     return(
         <div>
         <button onClick={()=> navig("/control_panel")}>Dashboard Hub</button><br/>
-        <button onClick={()=> navig("/edit_sensors")}>Edit Sensors</button>
-        <button onClick={()=> navig("/edit_users")}>Edit Users</button>
+        <button onClick={()=> navig("/edit_sensors")}>Edit Sensors</button> <br/>
+        <button onClick={()=> navig("/edit_users")}>Edit Users</button> <br/>
         </div>
 
 

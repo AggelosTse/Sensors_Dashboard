@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-export function ProtectedRoute({ allowedRoles }) {
+export function ProtectedRoute({ roleAllowed }) {
   const role = localStorage.getItem("role");
 
-
+   
   //if user's role isnt admin go back to login
-  if (allowedRoles!==role){
+  if (roleAllowed!==role){
     return <Navigate to="/control_panel" replace />;
   }
 

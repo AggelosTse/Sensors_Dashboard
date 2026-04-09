@@ -7,17 +7,18 @@ export function EditUsers(){
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [fullName, setFullName] = useState("");
-  
+    const [role,setRole] = useState("");
+
     const [serverMessage, setMessage] = useState("");
     const [serverMessageType, setMessageType] = useState("");
 
     const [sending, setSending] = useState(false); //to prevent spamming button
 
-    const data = {username,password,email,fullName};
-    const setters = {setUsername,setPassword,setEmail,setFullName};
+    const data = {username,password,email,fullName, role};
+    const setters = {setUsername,setPassword,setEmail,setFullName,setRole};
 
 
-    function addSubmit(){
+    async function addSubmit(){
       if (
         !username.trim() ||
         !password.trim() ||
@@ -35,7 +36,23 @@ export function EditUsers(){
         return;
       }
 
-      const response = fetch("/")
+      const response = await fetch("http://localhost:8001/adduser",{
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          email:email,
+          fullName:fullName,
+          role:role
+        }),
+      });
+
+
+      
     }
 
     return(
@@ -92,7 +109,7 @@ function AdminOptions({option,data,setters, addSubmit}){
     }
     
 }
-function Adduser({ username,password,email,fullName,setUsername,setPassword,setEmail,setFullName, addSubmit}){
+function Adduser({ username,password,email,fullName,role,setUsername,setPassword,setEmail,setFullName,setRole, addSubmit}){
     return(
         <div>
       <input
@@ -121,7 +138,19 @@ function Adduser({ username,password,email,fullName,setUsername,setPassword,setE
         placeholder="fullName"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
-      />
+      /> <br/>
+      <label for="options">ROLE</label > <br/>
+
+      <select 
+      name="userrole" 
+      id="userrole" 
+      onChange={(e) => setRole(e.target.value)}>
+
+        <option value="user">USER</option>
+        <option value="admin">ADMIN</option>
+      </select> 
+
+
       <button onClick={addSubmit}> ADD USER </button>
 
     </div>
