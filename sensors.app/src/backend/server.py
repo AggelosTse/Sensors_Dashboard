@@ -187,12 +187,12 @@ def adUserManager():
                 "message" : "Account with that name already exists"
             }),404
         else:
-            
+            #FIX ORDER
             query = '''
-                INSERT INTO users (username, password, email, fullName, role)
+                INSERT INTO users (username, password, role,email, fullName)   
                 VALUES (?, ?, ?, ?, ?)'''      
                 
-            cursor.execute(query, (username,password,email,fullName, role))
+            cursor.execute(query, (username,password,role,email,fullName,))
                 
             sqlConn.commit()
                 
@@ -215,9 +215,58 @@ def adUserManager():
         if sqlConn:
             sqlConn.close()
             
+            
+            
+            
+@app.route('/editusers', methods=['POST'])
+def adUserManager():
     
-    
-    
+    sqlConn = None   
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        fullName = data.get("fullName")
+        role = data.get("role")
+        
+        if(not username or not password or not email or not fullName or not role):
+                return jsonify({
+               "messagetype": "Error",
+               "message": "Missing Input"
+            }),404
                 
+                
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+        
+        query = '''
+            INSERT INTO users (username, password, email, fullName, role)
+            VALUES (?, ?, ?, ?, ?)'''      
+            
+        cursor.execute(query, (username,password,email,fullName, role))
+            
+        sqlConn.commit()
+            
+            
+        cursor.close()
+        
+        return jsonify({
+            "messagetype": "Valid",
+            "message" : "Account created successfully"
+        }),200
+         
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+ 
 if __name__ == '__main__':
     app.run(debug=True, port=8001)
