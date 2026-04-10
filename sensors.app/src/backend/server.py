@@ -216,10 +216,61 @@ def adUserManager():
             sqlConn.close()
             
             
+@app.route('/getUserData', methods=['GET'])
+def adUserManager():      
+     
+    sqlConn = None
+    try:
+        
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+        
+        query = 'SELECT username,email,role FROM users'
+        
+        cursor.execute(query)
+        
+        result = cursor.fetchall()   #afou username kleidi, enas mono tha mporei na to exei
+        
+        usernames = []
+        emails = []
+        roles = []
+        
+        
+        for row in result:
+            usernames.append(row[0])
+            emails.append(row[1])
+            roles.append(row[2])
             
+        userdata  = {
+            "usernames": usernames,
+            "emails": emails,
+            "roles":roles
+        }
+        
+        
+        return jsonify(userdata)
+        
+        
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+    
+    
+          
+          
+          
+          
             
 @app.route('/editusers', methods=['POST'])
-def adUserManager():
+def addUserManager():
     
     sqlConn = None   
     try:

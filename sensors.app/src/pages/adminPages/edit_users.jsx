@@ -114,18 +114,18 @@ function AdminOptions({ option, data, setters, addSubmit }) {
   if (option === "Add User") {
     return (
       <div>
-        <Adduser {...data} {...setters} addSubmit={addSubmit} />
+        <AddUser {...data} {...setters} addSubmit={addSubmit} />
       </div>
     );
   } else if (option === "Edit User") {
-    return <Edituser />;
+    return <UpdateUser />;
   } else if (option === "Remove User") {
     return <Removeuser />;
   } else {
     return null;
   }
 }
-function Adduser({
+function AddUser({
   username,
   password,
   email,
@@ -181,6 +181,43 @@ function Adduser({
   );
 }
 
+
+function UpdateUser(){
+
+  async function getUsersData(){
+    const response = await fetch("http://localhost:8001/getUserData", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      
+  });
+  const data = await response.json();
+  if(!response.ok){
+    
+  }
+
+}
+ 
+
+
+  return(
+    <div>
+      <table>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+      </tr>
+      </table>
+    </div>
+ 
+  );
+
+}
+
+
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
@@ -189,10 +226,4 @@ function ServerMessage({ message, messagetype }) {
   } else {
     return <p className="statusMessageValid">{message}</p>;
   }
-}
-
-
-function Edituser(){
-
-  
 }
