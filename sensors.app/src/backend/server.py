@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
-import jwt
 import os
 
 
@@ -226,15 +225,17 @@ def geruserdata():
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
         
-        query = 'SELECT id,username,email,role FROM users'
+        query = 'SELECT id,username,email,role,password,fullName FROM users'
         
         cursor.execute(query)
         
-        result = cursor.fetchall()   #afou username kleidi, enas mono tha mporei na to exei
+        result = cursor.fetchall()   
         
         id=[]
         usernames = []
         emails = []
+        passwords=[]
+        fullNames=[]
         roles = []
         
         
@@ -243,10 +244,15 @@ def geruserdata():
             usernames.append(row[1])
             emails.append(row[2])
             roles.append(row[3])
+            passwords.append(row[4])
+            fullNames.append(row[5])
+            
             
         userdata  = {
             "id":id,
             "usernames": usernames,
+            "passwords":passwords,
+            "fullnames":fullNames,
             "emails": emails,
             "roles":roles
         }
@@ -266,7 +272,60 @@ def geruserdata():
         if sqlConn:
             sqlConn.close()
             
+
+
+
+@app.route('/edituser', methods=['POST'])
+def editUserManager():
     
+    sqlConn = None   
+    try:
+        data = request.get_json()
+        userid = data.get("id")
+        username = data.get("username")
+        password = data.get("password")
+        email = data.get("email")
+        fullName = data.get("fullName")
+        role = data.get("role")
+        
+        if(not username or not password or not email or not fullName or not role):
+                return jsonify({
+               "messagetype": "Error",
+               "message": "Missing Input"
+            }),404
+                
+                
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+        
+        query = '''
+            UPDATE users SET username = ?, password = ?, email = ?, fullName = ?, role = ?
+            WHERE id = ?'''      
+            
+        cursor.execute(query, (username,password,email,fullName, role, userid))
+            
+        sqlConn.commit()
+            
+            
+        cursor.close()
+        
+        return jsonify({
+            "messagetype": "Valid",
+            "message" : "Account updated successfully"
+        }),200
+         
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+ 
     
           
           

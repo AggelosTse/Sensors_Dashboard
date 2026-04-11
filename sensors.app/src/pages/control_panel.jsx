@@ -53,6 +53,8 @@ function UsersList() {
         username: uname,
         email: data.emails[index],
         role: data.roles[index],
+        password: data.passwords[index],
+        fullname: data.fullnames[index]
       }));
       setUserlist(combined);
     }
@@ -84,7 +86,16 @@ function UsersList() {
                   <button
                     className="edit"
                     onClick={() =>
-                      navig("/edit_user", { state: { id: user.id } })
+                      navig("/edit_user", {
+                        state: {
+                          id: user.id,
+                          username:user.username,
+                          email:user.email,
+                          password: user.password,
+                          fullname: user.fullname,
+                          role:user.role
+                        },
+                      })
                     }
                   >
                     Edit
