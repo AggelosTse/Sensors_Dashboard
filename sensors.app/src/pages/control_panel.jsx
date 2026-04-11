@@ -1,8 +1,7 @@
 import "../styles/control_panel.css";
-
 import { useNavigate } from "react-router-dom";
-
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 export function ControlPanel() {
   const role = localStorage.getItem("role");
@@ -54,11 +53,54 @@ function UsersList() {
         email: data.emails[index],
         role: data.roles[index],
         password: data.passwords[index],
-        fullname: data.fullnames[index]
+        fullname: data.fullnames[index],
       }));
       setUserlist(combined);
     }
   }
+
+  const confirmationWndow = async (userid) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const response = await fetch("http://localhost:8001/deleteuser", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: userid,
+          }),
+        });
+
+        if (response.ok) {
+          await Swal.fire({
+            title: "Deleted!",
+            text: data.message,
+            icon: "success",
+          });
+
+          getUsersData();
+        } else {
+          const data = await response.json();
+
+          Swal.fire({
+            title: "Error!",
+            text: data.message,
+            icon: "error",
+          });
+        }
+      }
+    });
+  };
 
   return (
     <div>
@@ -84,23 +126,28 @@ function UsersList() {
                 <td>{user.role}</td>
                 <td>
                   <button
-                    className="edit"
                     onClick={() =>
                       navig("/edit_user", {
                         state: {
                           id: user.id,
-                          username:user.username,
-                          email:user.email,
+                          username: user.username,
+                          email: user.email,
                           password: user.password,
                           fullname: user.fullname,
-                          role:user.role
+                          role: user.role,
                         },
                       })
                     }
                   >
                     Edit
                   </button>
-                  <button className="delete">Delete</button>
+                  <button
+                    onClick={() => {
+                      confirmationWndow(user.id);
+                    }}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

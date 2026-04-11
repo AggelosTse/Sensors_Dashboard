@@ -327,9 +327,45 @@ def editUserManager():
             
  
     
-          
-          
-          
+@app.route('/deleteuser', methods=['POST'])
+def deleteUserManager():
+    
+    sqlConn = None
+    try:
+        
+         data = request.get_json()
+         userid = data.get("id")
+                
+         sqlConn = sqlite3.connect(db_path)
+         cursor = sqlConn.cursor()       #executes sql commands
+        
+         query = '''
+            DELETE FROM users WHERE id = ?'''      
+            
+         cursor.execute(query, (userid,))
+            
+         sqlConn.commit()
+            
+            
+         cursor.close()
+         
+         return jsonify({
+            "messagetype":"Success",
+            "message": "User deleted."
+        }),200
+         
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+ 
           
             
 

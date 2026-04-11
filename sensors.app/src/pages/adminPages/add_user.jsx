@@ -142,7 +142,7 @@ function AddUserField({
         onChange={(e) => setFullName(e.target.value)}
       />{" "}
       <br />
-      <label for="options">ROLE</label> <br />
+      <label htmlFor="options">ROLE</label> <br />
       <select
         name="userrole"
         id="userrole"

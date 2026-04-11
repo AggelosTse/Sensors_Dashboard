@@ -155,7 +155,7 @@ function ChosenUserData({
 function ChosenUserRole({ role, setRole }) {
   return (
     <div>
-      <label for="options">user role</label> <br />
+      <label htmlFor="options">user role</label> <br />
       <select
         name="editusers"
         id="edidusers"
