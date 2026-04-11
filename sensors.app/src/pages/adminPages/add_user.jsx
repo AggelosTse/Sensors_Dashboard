@@ -1,21 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export function EditUsers() {
-  const [option, setOption] = useState("");
+export function AddUser() {
+
+  const navig = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("user");
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
   const [sending, setSending] = useState(false); //to prevent spamming button
-
-  const data = { username, password, email, fullName, role };
-  const setters = { setUsername, setPassword, setEmail, setFullName, setRole };
 
   async function addSubmit() {
     if (sending) return; //if true, button is already doing a task
@@ -80,52 +79,27 @@ export function EditUsers() {
 
   return (
     <div>
-      <SelectionTab setOption={setOption} />
-
-      <AdminOptions
-        option={option}
-        data={data}
-        setters={setters}
+      <AddUserField
+        username={username}
+        setUsername={setUsername}
+        password={password}
+        setPassword={setPassword}
+        email={email}
+        setEmail={setEmail}
+        fullName={fullName}
+        setFullName={setFullName}
+        role={role}
+        setRole={setRole}
         addSubmit={addSubmit}
+        sending={sending}
       />
+
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function SelectionTab({ setOption }) {
-  return (
-    <div>
-      <label for="options">ADMIN OPTIONS</label> <br />
-      <select
-        name="editusers"
-        id="edidusers"
-        onChange={(e) => setOption(e.target.value)}
-      >
-        <option value=""></option>
-        <option value="Add User">ADD USER</option>
-        <option value="Edit User">EDIT USER</option>
-        <option value="Remove User">REMOVE USER</option>
-      </select>
-    </div>
-  );
-}
-function AdminOptions({ option, data, setters, addSubmit }) {
-  if (option === "Add User") {
-    return (
-      <div>
-        <AddUser {...data} {...setters} addSubmit={addSubmit} />
-      </div>
-    );
-  } else if (option === "Edit User") {
-    return <UpdateUser />;
-  } else if (option === "Remove User") {
-    return <Removeuser />;
-  } else {
-    return null;
-  }
-}
-function AddUser({
+function AddUserField({
   username,
   password,
   email,
@@ -136,6 +110,7 @@ function AddUser({
   setFullName,
   setRole,
   addSubmit,
+  sending,
 }) {
   return (
     <div>
@@ -176,47 +151,12 @@ function AddUser({
         <option value="user">USER</option>
         <option value="admin">ADMIN</option>
       </select>
-      <button onClick={addSubmit}> ADD USER </button>
+      <button onClick={addSubmit} disabled={sending}>
+        {sending ? "Sending..." : "ADD USER"}
+      </button>
     </div>
   );
 }
-
-
-function UpdateUser(){
-
-  async function getUsersData(){
-    const response = await fetch("http://localhost:8001/getUserData", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      
-  });
-  const data = await response.json();
-  if(!response.ok){
-    
-  }
-
-}
- 
-
-
-  return(
-    <div>
-      <table>
-      <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Role</th>
-      </tr>
-      </table>
-    </div>
- 
-  );
-
-}
-
 
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;

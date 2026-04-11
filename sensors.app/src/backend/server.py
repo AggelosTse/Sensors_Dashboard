@@ -161,7 +161,8 @@ def adUserManager():
         fullName = data.get("fullName")
         role = data.get("role")
         
-          
+        print(username,email,password,fullName,role)
+        
         if(not username or not password or not email or not fullName or not role):
                 return jsonify({
                "messagetype": "Error",
@@ -217,7 +218,7 @@ def adUserManager():
             
             
 @app.route('/getUserData', methods=['GET'])
-def adUserManager():      
+def geruserdata():      
      
     sqlConn = None
     try:
@@ -225,23 +226,26 @@ def adUserManager():
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
         
-        query = 'SELECT username,email,role FROM users'
+        query = 'SELECT id,username,email,role FROM users'
         
         cursor.execute(query)
         
         result = cursor.fetchall()   #afou username kleidi, enas mono tha mporei na to exei
         
+        id=[]
         usernames = []
         emails = []
         roles = []
         
         
         for row in result:
-            usernames.append(row[0])
-            emails.append(row[1])
-            roles.append(row[2])
+            id.append(row[0])
+            usernames.append(row[1])
+            emails.append(row[2])
+            roles.append(row[3])
             
         userdata  = {
+            "id":id,
             "usernames": usernames,
             "emails": emails,
             "roles":roles
@@ -269,55 +273,6 @@ def adUserManager():
           
           
             
-@app.route('/editusers', methods=['POST'])
-def addUserManager():
-    
-    sqlConn = None   
-    try:
-        data = request.get_json()
-        username = data.get("username")
-        password = data.get("password")
-        email = data.get("email")
-        fullName = data.get("fullName")
-        role = data.get("role")
-        
-        if(not username or not password or not email or not fullName or not role):
-                return jsonify({
-               "messagetype": "Error",
-               "message": "Missing Input"
-            }),404
-                
-                
-        sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()       #executes sql commands
-        
-        query = '''
-            INSERT INTO users (username, password, email, fullName, role)
-            VALUES (?, ?, ?, ?, ?)'''      
-            
-        cursor.execute(query, (username,password,email,fullName, role))
-            
-        sqlConn.commit()
-            
-            
-        cursor.close()
-        
-        return jsonify({
-            "messagetype": "Valid",
-            "message" : "Account created successfully"
-        }),200
-         
-    except sqlite3.Error as error:
-        return jsonify({
-            "messagetype":"Error",
-            "message": str(error)
-        }),404
-    
-    finally:
-     
-        if sqlConn:
-            sqlConn.close()
-            
- 
+
 if __name__ == '__main__':
     app.run(debug=True, port=8001)
