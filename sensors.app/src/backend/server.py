@@ -144,12 +144,59 @@ def signUpmanager():
             sqlConn.close()
             
             
-            
-            
+
+
+
+
+
+
+
+@app.route('/getSensorsData', methods=['GET'])
+def getsensorData(): 
+
+    sqlConn = None
+
+    try:
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+
+        query =  ''' SELECT s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
+
+        cursor.execute(query)
+        
+        result = cursor.fetchall()   
+        
+        sensorNames = []
+        sensorCategories = []
+
+        for row in result:
+            sensorNames.append(row[0])
+            sensorCategories.append(row[1])
+
+        sensorData = {
+            "names":sensorNames,
+            "categories":sensorCategories
+        }
+
+        return jsonify(sensorData)
+
+        
+    except sqlite3.Error as error:
+        return jsonify({
+            "message": str(error)
+        }),404
+
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+
+
+
 #ADMIN ENDPOINTS
 
 @app.route('/adduser', methods=['POST'])
-def adUserManager(): 
+def addUserManager(): 
     
     sqlConn = None   
     try:
@@ -217,10 +264,11 @@ def adUserManager():
             
             
 @app.route('/getUserData', methods=['GET'])
-def geruserdata():      
+def getuserdata():      
      
     sqlConn = None
     try:
+
         
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
@@ -257,13 +305,12 @@ def geruserdata():
             "roles":roles
         }
         
-        
         return jsonify(userdata)
+
         
         
     except sqlite3.Error as error:
         return jsonify({
-            "messagetype":"Error",
             "message": str(error)
         }),404
     
