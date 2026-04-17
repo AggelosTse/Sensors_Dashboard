@@ -12,8 +12,8 @@ export function ControlPanel() {
     <div>
       <Boxes />
 
-      <SensorsTable/>
-
+      {role === "admin" && <AddSensorButton />}
+      <SensorsTable />
 
       {role === "admin" && <UsersList />}
     </div>
@@ -32,15 +32,25 @@ function Boxes() {
 }
 
 
+function AddSensorButton() {
+  const navig = useNavigate();
 
-function SensorsTable(){
+  return (
+    <button onClick={() => navig("/addSensor")}>Add Sensor</button>
+  )
+}
+
+
+
+
+function SensorsTable() {
 
   const [sensorList, setSensorlist] = useState([]);
 
   const [errorOcured, setErrorOccured] = useState(false);
   const [serverMessage, setMessage] = useState("");
 
-    useEffect(() => {
+  useEffect(() => {
     //load data when page loads
     setErrorOccured(false);
     getSensorData();
@@ -48,7 +58,7 @@ function SensorsTable(){
   }, []);
 
 
-  async function getSensorData(){
+  async function getSensorData() {
     const response = await fetch("http://localhost:8001/getSensorsData", {
       method: "GET",
       headers: {
@@ -61,7 +71,7 @@ function SensorsTable(){
       setErrorOccured(false);
       const combined = data.names.map((sensorName, index) => ({
         name: sensorName,
-        category: data.categories[index] 
+        category: data.categories[index]
 
       }));
       setSensorlist(combined);
@@ -82,15 +92,15 @@ function SensorsTable(){
               <tr>
                 <th>Name</th>
                 <th>Category</th>
-               
+
               </tr>
             </thead>
             <tbody>
               <tr>
-              <td colSpan="2" style={{ textAlign: "center", color: "red", padding: "20px" }}>
-                {serverMessage} 
-              </td>
-            </tr>
+                <td colSpan="2" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                  {serverMessage}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -100,8 +110,6 @@ function SensorsTable(){
   else {
     return (
       <div>
-        <button>add sensor</button>
-
         <div>
           <table>
             <thead>
@@ -116,11 +124,10 @@ function SensorsTable(){
                   <td>{sensor.name}</td>
                   <td>{sensor.category}</td>
                   <td>
-                    <button
-                    >
-                      Edit
+                    <button>
+                      More Info
                     </button>
-          
+
                   </td>
                 </tr>
               ))}
@@ -241,10 +248,10 @@ function UsersList() {
             </thead>
             <tbody>
               <tr>
-              <td colSpan="5" style={{ textAlign: "center", color: "red", padding: "20px" }}>
-                {serverMessage} 
-              </td>
-            </tr>
+                <td colSpan="5" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                  {serverMessage}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

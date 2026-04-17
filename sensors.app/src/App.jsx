@@ -6,7 +6,7 @@ import { SignUpPage } from "./pages/signup.jsx";
 import { ControlPanel } from "./pages/control_panel.jsx";
 import { AddUser } from "./pages/adminPages/add_user.jsx";
 import { EditUser } from "./pages/adminPages/edit_user.jsx";
-
+import { AddSensors } from "./pages/adminPages/addSensor.jsx";
 
 function App() {
   return (
@@ -19,6 +19,8 @@ function App() {
         <Route element={<ProtectedRoute roleAllowed="admin" />}>
           <Route path="/add_user" element={<AddUser />} />
           <Route path="/edit_user" element={<EditUser />} />
+          <Route path="/addSensor" element={<AddSensors />} />
+
 
         </Route>
           

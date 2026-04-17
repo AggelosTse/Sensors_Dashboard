@@ -146,8 +146,20 @@ def signUpmanager():
             
 
 
+@app.route('/addsensor', methods=['GET'])
+def addSensorManager(): 
 
+    sqlConn = None
+    
+    sqlConn = sqlite3.connect(db_path)
+    cursor = sqlConn.cursor()     
 
+    query =  ''' SELECT s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
+
+    cursor.execute(query)
+        
+    result = cursor.fetchall() 
+  
 
 
 
