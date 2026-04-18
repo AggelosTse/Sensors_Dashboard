@@ -32,13 +32,18 @@ def logInvalidate():
                "message": "Missing Input"
             }),404
         
-        query = 'SELECT password, role FROM users WHERE username = ?'
+        query = '''
+                SELECT u.password, r.role 
+                FROM users u 
+                JOIN roles r ON u.role_id = r.id 
+                WHERE u.username = ?
+            '''
         
         cursor.execute(query, (username,))
         
         result = cursor.fetchone()   #afou username kleidi, enas mono tha mporei na to exei
         
-        if result == None :
+        if result is None :
             return jsonify({
                "messagetype": "Error",
                "message": "No accounts with that name exist yet"
@@ -115,12 +120,16 @@ def signUpmanager():
                 role = "user"
                 
                 
+            tempquery = 'SELECT id FROM roles WHERE role = ?'
+            cursor.execute(tempquery,(role,))
+            res = cursor.fetchone()
+            roleID = res[0]
            
             query = '''
-            INSERT INTO users (username, password, email, fullName, role)
+            INSERT INTO users (username, password, email, fullName, role_id)
             VALUES (?, ?, ?, ?, ?)'''      
             
-            cursor.execute(query, (username,password,email,fullName, role))
+            cursor.execute(query, (username,password,email,fullName, roleID))
             
             sqlConn.commit()
             
@@ -151,15 +160,31 @@ def addSensorManager():
 
     sqlConn = None
     
-    sqlConn = sqlite3.connect(db_path)
-    cursor = sqlConn.cursor()     
+    try:
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()     
 
-    query =  ''' SELECT s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
+        query = '''
+                INSERT INTO sensors s (s.name, s.metadata) JOIN sensor_categories c ON s.
+                VALUES (?, ?, ?, ?, ?)'''      
+                
+        cursor.execute(query, ())
+                
+        sqlConn.commit()
+                
+                
+        cursor.close()
 
-    cursor.execute(query)
-        
-    result = cursor.fetchall() 
-  
+
+    except sqlite3.Error as error:
+        return jsonify({
+            "message": str(error)
+        }),404
+
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
 
 
 
@@ -205,7 +230,52 @@ def getsensorData():
 
 
 
-#ADMIN ENDPOINTS
+
+@app.route('/getUserRoles', methods=['GET'])
+def getRoles():
+
+    sqlConn = None 
+    try:
+
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()       #executes sql commands
+        
+        query = 'SELECT role FROM roles'
+        
+        cursor.execute(query)
+        
+        result = cursor.fetchall() 
+
+        if result is not None: 
+            roleList = []
+
+            for row in result:
+                roleList.append(row[0])
+            
+            return jsonify(roleList)
+
+        else:
+             return jsonify({
+            "messagetype":"Error",
+            "message": "No roles Found"
+        }),404
+
+
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+            
+        
+
+
 
 @app.route('/adduser', methods=['POST'])
 def addUserManager(): 
@@ -218,9 +288,7 @@ def addUserManager():
         email = data.get("email")
         fullName = data.get("fullName")
         role = data.get("role")
-        
-        print(username,email,password,fullName,role)
-        
+                
         if(not username or not password or not email or not fullName or not role):
                 return jsonify({
                "messagetype": "Error",
@@ -246,12 +314,17 @@ def addUserManager():
                 "message" : "Account with that name already exists"
             }),404
         else:
-            #FIX ORDER
+      
+            tempquery = 'SELECT id FROM roles WHERE role = ?'
+            cursor.execute(tempquery,(role,))
+            res = cursor.fetchone()
+            roleID = res[0]
+
             query = '''
-                INSERT INTO users (username, password, role,email, fullName)   
+                INSERT INTO users (username, password, role_id,email, fullName)   
                 VALUES (?, ?, ?, ?, ?)'''      
                 
-            cursor.execute(query, (username,password,role,email,fullName,))
+            cursor.execute(query, (username,password,roleID,email,fullName,))
                 
             sqlConn.commit()
                 
@@ -285,13 +358,18 @@ def getuserdata():
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
         
-        query = 'SELECT id,username,email,role,password,fullName FROM users'
+        query ='''SELECT s.id,s.username,s.email,s.password,s.fullName, r.role
+                    FROM users s
+                    JOIN roles r 
+                    ON s.role_id = r.id
+                    ORDER BY s.id ASC
+                '''
         
         cursor.execute(query)
         
         result = cursor.fetchall()   
         
-        id=[]
+        user_id=[]
         usernames = []
         emails = []
         passwords=[]
@@ -300,16 +378,16 @@ def getuserdata():
         
         
         for row in result:
-            id.append(row[0])
+            user_id.append(row[0])
             usernames.append(row[1])
             emails.append(row[2])
-            roles.append(row[3])
-            passwords.append(row[4])
-            fullNames.append(row[5])
-            
+            passwords.append(row[3])
+            fullNames.append(row[4])
+            roles.append(row[5])
+
             
         userdata  = {
-            "id":id,
+            "id":user_id,
             "usernames": usernames,
             "passwords":passwords,
             "fullnames":fullNames,
@@ -357,11 +435,18 @@ def editUserManager():
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
         
+
+        tempquery = 'SELECT id FROM roles WHERE role = ?'
+        cursor.execute(tempquery,(role,))
+        res = cursor.fetchone()
+        roleID = res[0]
+
+
         query = '''
-            UPDATE users SET username = ?, password = ?, email = ?, fullName = ?, role = ?
+            UPDATE users SET username = ?, password = ?, email = ?, fullName = ?, role_id = ?
             WHERE id = ?'''      
             
-        cursor.execute(query, (username,password,email,fullName, role, userid))
+        cursor.execute(query, (username,password,email,fullName, roleID, userid))
             
         sqlConn.commit()
             

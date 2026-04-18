@@ -109,6 +109,8 @@ export function EditUser() {
     </div>
   );
 }
+
+
 function ChosenUserData({
   username,
   setUsername,
@@ -119,6 +121,8 @@ function ChosenUserData({
   fullName,
   setFullName,
 }) {
+
+
   return (
     <div>
       <input
@@ -153,6 +157,29 @@ function ChosenUserData({
 }
 
 function ChosenUserRole({ role, setRole }) {
+
+    const [userRole,setUserRole] = useState([]);
+
+  useEffect(() => {
+    fetchUserRole();
+
+  }, []);
+
+  async function fetchUserRole() {
+    const response = await fetch("http://localhost:8001/getUserRoles", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setUserRole(data)
+    }
+  }
+  
   return (
     <div>
       <label htmlFor="options">user role</label> <br />
@@ -162,8 +189,11 @@ function ChosenUserRole({ role, setRole }) {
         value={role}
         onChange={(e) => setRole(e.target.value)}
       >
-        <option value="admin">admin</option>
-        <option value="user">user</option>
+        {userRole.map((role, index) => (
+          <option key={index} value={role}>
+            {role.toUpperCase()}
+          </option>
+        ))}
       </select>
     </div>
   );

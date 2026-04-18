@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function AddUser() {
@@ -112,6 +112,33 @@ function AddUserField({
   addSubmit,
   sending,
 }) {
+
+  const [roleslist, setRolesList] = useState([]);
+
+
+  useEffect(() => {
+    fetchRoles();
+
+  }, []);
+
+
+
+  async function fetchRoles() {
+    const response = await fetch("http://localhost:8001/getUserRoles", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setRolesList(data)
+    }
+
+  }
+
   return (
     <div>
       <input
@@ -148,8 +175,11 @@ function AddUserField({
         id="userrole"
         onChange={(e) => setRole(e.target.value)}
       >
-        <option value="user">USER</option>
-        <option value="admin">ADMIN</option>
+        {roleslist.map((role, index) => (
+          <option key={index} value={role}>
+            {role.toUpperCase()}
+          </option>
+        ))}
       </select>
       <button onClick={addSubmit} disabled={sending}>
         {sending ? "Sending..." : "ADD USER"}

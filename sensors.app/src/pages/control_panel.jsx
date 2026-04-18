@@ -47,7 +47,7 @@ function SensorsTable() {
 
   const [sensorList, setSensorlist] = useState([]);
 
-  const [errorOcured, setErrorOccured] = useState(false);
+  const [errorOccured, setErrorOccured] = useState(false);
   const [serverMessage, setMessage] = useState("");
 
   useEffect(() => {
@@ -82,7 +82,7 @@ function SensorsTable() {
     }
   }
 
-  if (errorOcured) {
+  if (errorOccured) {
     return (
       <div>
 
@@ -146,7 +146,7 @@ function SensorsTable() {
 
 function UsersList() {
   const [userlist, setUserlist] = useState([]);
-  const [errorOcured, setErrorOccured] = useState(false);
+  const [errorOccured, setErrorOccured] = useState(false);
   const [serverMessage, setMessage] = useState("");
 
   const navig = useNavigate();
@@ -231,7 +231,7 @@ function UsersList() {
   };
 
 
-  if (errorOcured) {
+  if (errorOccured) {
     return (
       <div>
 

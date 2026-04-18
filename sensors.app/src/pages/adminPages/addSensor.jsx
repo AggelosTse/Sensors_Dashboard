@@ -21,10 +21,10 @@ export function AddSensors() {
         setSending(true);
 
         if (
-            !username.trim() ||
-            !password.trim() ||
-            !email.trim() ||
-            !fullName.trim()
+            !name.trim() ||
+            !metadata.trim() ||
+            !category.trim() 
+            
         ) {
             setTimeout(() => {
                 setMessage("Missing Input");
@@ -37,17 +37,16 @@ export function AddSensors() {
             return;
         }
 
-        const response = await fetch("http://localhost:8001/signUp", {
+        const response = await fetch("http://localhost:8001/addsensor", {
             method: "POST",
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                username: username,
-                password: password,
-                email: email,
-                fullName: fullName,
+                name: name,
+                metadata: metadata,
+                category: category   
             }),
         });
 
@@ -57,9 +56,9 @@ export function AddSensors() {
             setMessageType(data.messagetype);
 
             setTimeout(() => {
-                //navigating to login page after 4 seconds
+               
                 setSending(false);
-                navig("/"); //navigate to login
+                navig("/control_panel");
             }, 2200);
         } else {
             setTimeout(() => {
@@ -120,7 +119,9 @@ function Fields({
                 placeholder="Metadata"
                 onChange={(e) => setMetadata(e.target.value)}
             />
-            <label htmlFor="options">ROLE</label> <br />
+            <br />
+            <label htmlFor="options">ROLE</label>
+             <br />
             <select
                 name="sensortype"
                 id="sensortype"
@@ -129,6 +130,7 @@ function Fields({
                 <option value="humidity">HUMIDITY</option>
                 <option value="temperature">TEMPERATURE</option>
             </select>
+            <br />
             <button onClick={handleAddSensor} disabled={sending}>
                 {sending ? "Sending..." : "ADD SENSOR"}
             </button>
