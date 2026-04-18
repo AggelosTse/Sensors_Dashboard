@@ -155,7 +155,7 @@ def signUpmanager():
             
 
 
-@app.route('/addsensor', methods=['GET'])
+@app.route('/addsensor', methods=['POST'])
 def addSensorManager(): 
 
     sqlConn = None
@@ -164,17 +164,33 @@ def addSensorManager():
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()     
 
-        query = '''
-                INSERT INTO sensors s (s.name, s.metadata) JOIN sensor_categories c ON s.
-                VALUES (?, ?, ?, ?, ?)'''      
+        data = request.get_json()
+        sensorName = data.get("name")
+        metadata = data.get("metadata")
+        category = data.get("category")
+        print(category,sensorName,metadata)
+
+        tempquery = '''SELECT id FROM sensor_categories WHERE category = ? '''
+
+        cursor.execute(tempquery, (category,))
+        result = cursor.fetchone()
+
+        categoryID = result[0]
+
+       
+        query = '''INSERT INTO sensors (name, metadata, category_id) VALUES (?, ?, ?)'''      
                 
-        cursor.execute(query, ())
+        cursor.execute(query, (sensorName,metadata,categoryID))
                 
         sqlConn.commit()
                 
                 
         cursor.close()
 
+        return jsonify({
+                "messagetype": "Valid",
+                "message" : "Sensor Added successfully"
+            }),200
 
     except sqlite3.Error as error:
         return jsonify({

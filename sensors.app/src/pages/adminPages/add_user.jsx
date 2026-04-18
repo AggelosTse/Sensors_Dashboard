@@ -9,7 +9,7 @@ export function AddUser() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("");
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
@@ -135,6 +135,11 @@ function AddUserField({
     const data = await response.json();
     if (response.ok) {
       setRolesList(data)
+
+
+      if (data.length > 0) {
+        setRole(data[0]); 
+      }
     }
 
   }
@@ -177,7 +182,7 @@ function AddUserField({
       >
         {roleslist.map((role, index) => (
           <option key={index} value={role}>
-            {role.toUpperCase()}
+            {role}
           </option>
         ))}
       </select>

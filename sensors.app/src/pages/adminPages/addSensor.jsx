@@ -6,7 +6,7 @@ export function AddSensors() {
 
     const [name, setName] = useState("");
     const [metadata, setMetadata] = useState("");
-    const [category, setCategory] = useState("");
+    const [category, setCategory] = useState("Humidity");
 
     const [serverMessage, setMessage] = useState("");
     const [serverMessageType, setMessageType] = useState("");
@@ -19,6 +19,7 @@ export function AddSensors() {
         if (sending) return; //if true, button is already doing a task
 
         setSending(true);
+        console.log(name,metadata,category);
 
         if (
             !name.trim() ||
@@ -127,8 +128,8 @@ function Fields({
                 id="sensortype"
                 onChange={(e) => setCategory(e.target.value)}
             >
-                <option value="humidity">HUMIDITY</option>
-                <option value="temperature">TEMPERATURE</option>
+                <option value="Humidity">HUMIDITY</option>
+                <option value="Temperature">TEMPERATURE</option>
             </select>
             <br />
             <button onClick={handleAddSensor} disabled={sending}>
