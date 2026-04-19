@@ -153,6 +153,38 @@ def signUpmanager():
             sqlConn.close()
             
             
+# SENSORS
+
+@app.route('/getSensorCategories', methods=['GET'])
+def sensorCategoriesManager(): 
+
+    sqlConn = None
+    try:
+
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()   
+
+        query = 'SELECT category FROM sensor_categories'
+
+        cursor.execute(query)
+
+        result = cursor.fetchall()
+        categories = []
+        for row in result:
+            categories.append(row[0])
+
+        return jsonify(categories)
+
+    except sqlite3.Error as error:
+        return jsonify({
+            "message": str(error)
+        }),404
+
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+
 
 
 @app.route('/addsensor', methods=['POST'])
@@ -203,33 +235,122 @@ def addSensorManager():
             sqlConn.close()
 
 
+@app.route('/getChosenSensorData', methods=['GET'])
+def chosenSensorDataManager():
+    
+    sqlConn = None
+    try:
+            sensor_id = request.args.get('id')
+
+            sqlConn = sqlite3.connect(db_path)
+            cursor = sqlConn.cursor()       #executes sql commands
+
+            query =  ''' SELECT s.name, s.metadata, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id WHERE s.id = ?'''
+
+            cursor.execute(query, (sensor_id,))
+            
+            result = cursor.fetchone()   
+            
+            sensorName = result[0]
+            sensorMetadata = result[1]
+            sensorCategory = result[2]
+            
+
+            
+
+            sensorData = {
+                "name":sensorName,
+                "category":sensorCategory,
+                "metadata": sensorMetadata
+            }
+
+            return jsonify(sensorData)
+    
+
+    except sqlite3.Error as error:
+        return jsonify({
+            "message": str(error)
+        }),404
+
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+
+
+
+
+@app.route('/editSensor', methods=['POST'])
+def editSensorManager(): 
+
+    pass
 
 @app.route('/getSensorsData', methods=['GET'])
 def getsensorData(): 
 
     sqlConn = None
 
+
     try:
+
+        includeAllData = request.args.get('allData', default='false').lower() == 'true'
+
+        if not includeAllData:
+
+            sqlConn = sqlite3.connect(db_path)
+            cursor = sqlConn.cursor()       #executes sql commands
+
+            query =  ''' SELECT s.id,s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
+
+            cursor.execute(query)
+            
+            result = cursor.fetchall()   
+            
+            sensorIDs = []
+            sensorNames = []
+            sensorCategories = []
+
+            for row in result:
+                sensorIDs.append(row[0])
+                sensorNames.append(row[1])
+                sensorCategories.append(row[2])
+
+            sensorData = {
+                "id":sensorIDs,
+                "names":sensorNames,
+                "categories":sensorCategories
+            }
+
+            return jsonify(sensorData)
+        
+
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()       #executes sql commands
 
-        query =  ''' SELECT s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
+        query =  ''' SELECT s.id,s.name, c.category,s.metadata FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
 
         cursor.execute(query)
-        
+            
         result = cursor.fetchall()   
-        
+            
+        sensorIDs = []
         sensorNames = []
         sensorCategories = []
+        sensorMetadata = []
 
         for row in result:
-            sensorNames.append(row[0])
-            sensorCategories.append(row[1])
+                sensorIDs.append(row[0])
+                sensorNames.append(row[1])
+                sensorCategories.append(row[2])
+                sensorMetadata.append(row[3])
 
         sensorData = {
-            "names":sensorNames,
-            "categories":sensorCategories
-        }
+                "id":sensorIDs,
+                "names":sensorNames,
+                "categories":sensorCategories,
+                "metadata" : sensorMetadata
+
+            }
 
         return jsonify(sensorData)
 
@@ -246,6 +367,7 @@ def getsensorData():
 
 
 
+# USERS
 
 @app.route('/getUserRoles', methods=['GET'])
 def getRoles():

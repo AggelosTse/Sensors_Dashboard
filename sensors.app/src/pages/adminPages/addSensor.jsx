@@ -19,13 +19,13 @@ export function AddSensors() {
         if (sending) return; //if true, button is already doing a task
 
         setSending(true);
-        console.log(name,metadata,category);
+        console.log(name, metadata, category);
 
         if (
             !name.trim() ||
             !metadata.trim() ||
-            !category.trim() 
-            
+            !category.trim()
+
         ) {
             setTimeout(() => {
                 setMessage("Missing Input");
@@ -47,7 +47,7 @@ export function AddSensors() {
             body: JSON.stringify({
                 name: name,
                 metadata: metadata,
-                category: category   
+                category: category
             }),
         });
 
@@ -57,7 +57,7 @@ export function AddSensors() {
             setMessageType(data.messagetype);
 
             setTimeout(() => {
-               
+
                 setSending(false);
                 navig("/control_panel");
             }, 2200);
@@ -121,8 +121,8 @@ function Fields({
                 onChange={(e) => setMetadata(e.target.value)}
             />
             <br />
-            <label htmlFor="options">ROLE</label>
-             <br />
+            <label htmlFor="options">Categories</label>
+            <br />
             <select
                 name="sensortype"
                 id="sensortype"

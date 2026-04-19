@@ -67,7 +67,6 @@ export function EditUser() {
       }),
     });
 
-    const data = await response.json();
     if (response.ok) {
       setMessage(data.message);
       setMessageType(data.messagetype);
@@ -85,7 +84,8 @@ export function EditUser() {
       setTimeout(() => {
         setSending(false);
       }, 2200);
-    }
+    }const data = await response.json();
+    
   }
 
   return (
@@ -101,7 +101,7 @@ export function EditUser() {
         setFullName={setFullName}
       />
 
-      <ChosenUserRole role={role} setRole={setRole} />
+      <AvailableRoles role={role} setRole={setRole} />
 
       <button onClick={submitButton}>Update</button>
 
@@ -156,16 +156,16 @@ function ChosenUserData({
   );
 }
 
-function ChosenUserRole({ role, setRole }) {
+function AvailableRoles({ role, setRole }) {
 
     const [userRole,setUserRole] = useState([]);
 
   useEffect(() => {
-    fetchUserRole();
+    fetchAvailableRoles();
 
   }, []);
 
-  async function fetchUserRole() {
+  async function fetchUserRofetchAvailableRolesles() {
     const response = await fetch("http://localhost:8001/getUserRoles", {
       method: "GET",
       headers: {
@@ -191,7 +191,7 @@ function ChosenUserRole({ role, setRole }) {
       >
         {userRole.map((role, index) => (
           <option key={index} value={role}>
-            {role.toUpperCase()}
+            {role}
           </option>
         ))}
       </select>

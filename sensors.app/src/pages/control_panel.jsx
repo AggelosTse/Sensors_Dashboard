@@ -44,6 +44,7 @@ function AddSensorButton() {
 
 
 function SensorsTable() {
+    const navig = useNavigate();    
 
   const [sensorList, setSensorlist] = useState([]);
 
@@ -58,8 +59,9 @@ function SensorsTable() {
   }, []);
 
 
+  //sensors table on the control panel
   async function getSensorData() {
-    const response = await fetch("http://localhost:8001/getSensorsData", {
+    const response = await fetch("http://localhost:8001/getSensorsData?allData=false", {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -70,9 +72,9 @@ function SensorsTable() {
     if (response.ok) {
       setErrorOccured(false);
       const combined = data.names.map((sensorName, index) => ({
+        id: data.id[index],
         name: sensorName,
         category: data.categories[index]
-
       }));
       setSensorlist(combined);
     }
@@ -114,6 +116,7 @@ function SensorsTable() {
           <table>
             <thead>
               <tr>
+                <th>id</th>
                 <th>Name</th>
                 <th>Category</th>
               </tr>
@@ -121,13 +124,27 @@ function SensorsTable() {
             <tbody>
               {sensorList.map((sensor, index) => (
                 <tr key={index}>
+                  <td>{sensor.id}</td>
                   <td>{sensor.name}</td>
                   <td>{sensor.category}</td>
                   <td>
-                    <button>
-                      More Info
+                    <button
+                      onClick={() =>
+                        navig("/edit_sensor", {
+                          state: {
+                            id: sensor.id
+                          },
+                        })
+                      }
+                    >
+                      Edit
                     </button>
-
+                  </td>
+                  <td>
+                    <button>
+                        More Info
+                    </button>
+                  
                   </td>
                 </tr>
               ))}
