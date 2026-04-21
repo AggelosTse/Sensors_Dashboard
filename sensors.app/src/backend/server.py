@@ -283,7 +283,49 @@ def chosenSensorDataManager():
 @app.route('/editSensor', methods=['POST'])
 def editSensorManager(): 
 
-    pass
+    sqlConn = None
+    try:
+        data = request.get_json()
+        sensorID = data.get("id")
+        sensorName = data.get("name")
+        sensorCategory = data.get("category")
+        sensorMetadata = data.get("metadata")
+        
+        
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()    
+        
+        tempquery = "SELECT id FROM sensor_categories WHERE category = ?"
+        cursor.execute(tempquery,(sensorCategory,))
+        
+        result = cursor.fetchone()
+        categoryID = result[0]
+        
+        query = "UPDATE sensors SET name = ?,metadata = ?,category_id = ? WHERE id = ?"
+        
+        cursor.execute(query,(sensorName,sensorMetadata,categoryID, sensorID))
+        
+        sqlConn.commit()
+        cursor.close()
+                
+        return jsonify({
+            "messagetype": "Valid",
+            "message" : "Sensor updated successfully"
+        }),200
+         
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+                
+    
+        
 
 @app.route('/getSensorsData', methods=['GET'])
 def getsensorData(): 
@@ -462,7 +504,7 @@ def addUserManager():
                 INSERT INTO users (username, password, role_id,email, fullName)   
                 VALUES (?, ?, ?, ?, ?)'''      
                 
-            cursor.execute(query, (username,password,roleID,email,fullName,))
+            cursor.execute(query, (username,password,roleID,email,fullName))
                 
             sqlConn.commit()
                 

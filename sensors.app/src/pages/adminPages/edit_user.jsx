@@ -165,7 +165,7 @@ function AvailableRoles({ role, setRole }) {
 
   }, []);
 
-  async function fetchUserRofetchAvailableRolesles() {
+  async function fetchAvailableRoles() {
     const response = await fetch("http://localhost:8001/getUserRoles", {
       method: "GET",
       headers: {
