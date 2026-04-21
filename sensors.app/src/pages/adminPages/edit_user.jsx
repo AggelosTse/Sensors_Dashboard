@@ -84,7 +84,7 @@ export function EditUser() {
       setTimeout(() => {
         setSending(false);
       }, 2200);
-    }const data = await response.json();
+    }
     
   }
 

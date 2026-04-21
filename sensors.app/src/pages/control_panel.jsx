@@ -141,7 +141,13 @@ function SensorsTable() {
                     </button>
                   </td>
                   <td>
-                    <button>
+                    <button onClick={() =>
+                        navig("/sensorMoreInfo", {
+                          state: {
+                            id: sensor.id
+                          },
+                        })
+                      }>
                         More Info
                     </button>
                   

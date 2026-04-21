@@ -407,6 +407,14 @@ def getsensorData():
         if sqlConn:
             sqlConn.close()
 
+@app.route('/getMeasurements', methods=['GET'])
+def getMeasurementsManager(): 
+    
+    sqlConn = None
+    
+    try:
+        
+
 
 
 # USERS
