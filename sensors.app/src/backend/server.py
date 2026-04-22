@@ -407,14 +407,51 @@ def getsensorData():
         if sqlConn:
             sqlConn.close()
 
+
+
 @app.route('/getMeasurements', methods=['GET'])
 def getMeasurementsManager(): 
     
     sqlConn = None
     
     try:
+        sensorID = request.args.get('id')
         
-
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()    
+        
+        query = "SELECT m.value,m.timestamp FROM measurements m JOIN sensors s ON s.id = m.sensor_id WHERE s.id = ? ORDER BY m.timestamp ASC"
+        
+        cursor.execute(query,(sensorID,))
+        
+        result = cursor.fetchall()
+        sensorValuesList = []
+        sensorTimeStampsList = []
+        
+        for row in result:
+            sensorValuesList.append(row[0])
+            sensorTimeStampsList.append(row[1])
+        
+        sensorData = {
+            "values": sensorValuesList,
+            "timestamps":sensorTimeStampsList
+        }
+        return jsonify(sensorData)
+        
+        
+    except sqlite3.Error as error:
+        return jsonify({
+            "messagetype":"Error",
+            "message": str(error)
+        }),404
+    
+    finally:
+     
+        if sqlConn:
+            sqlConn.close()
+            
+        
+     
 
 
 # USERS
