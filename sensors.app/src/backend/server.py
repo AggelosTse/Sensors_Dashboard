@@ -235,6 +235,7 @@ def addSensorManager():
             sqlConn.close()
 
 
+#gets data from specific sensor 
 @app.route('/getChosenSensorData', methods=['GET'])
 def chosenSensorDataManager():
     
@@ -245,12 +246,22 @@ def chosenSensorDataManager():
             sqlConn = sqlite3.connect(db_path)
             cursor = sqlConn.cursor()       #executes sql commands
 
-            query =  ''' SELECT s.name, s.metadata, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id WHERE s.id = ?'''
+            query =  ''' SELECT s.name, s.metadata, c.category FROM sensors s JOIN sensor_categories c ON s.category_id = c.id WHERE s.id = ?'''
 
             cursor.execute(query, (sensor_id,))
             
             result = cursor.fetchone()   
             
+            
+            if result is None:
+                
+                    
+                return jsonify({
+                "messagetype":"Error",
+                "message": f"Sensor with ID: {id} couldnt be found"
+            }),404
+                
+                
             sensorName = result[0]
             sensorMetadata = result[1]
             sensorCategory = result[2]
@@ -326,7 +337,7 @@ def editSensorManager():
                 
     
         
-
+#returns all sensors for the control panel
 @app.route('/getSensorsData', methods=['GET'])
 def getsensorData(): 
 
@@ -334,10 +345,6 @@ def getsensorData():
 
 
     try:
-
-        includeAllData = request.args.get('allData', default='false').lower() == 'true'
-
-        if not includeAllData:
 
             sqlConn = sqlite3.connect(db_path)
             cursor = sqlConn.cursor()       #executes sql commands
@@ -364,38 +371,6 @@ def getsensorData():
             }
 
             return jsonify(sensorData)
-        
-
-        sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()       #executes sql commands
-
-        query =  ''' SELECT s.id,s.name, c.category,s.metadata FROM sensors s JOIN sensor_categories c ON s.category_id == c.id'''
-
-        cursor.execute(query)
-            
-        result = cursor.fetchall()   
-            
-        sensorIDs = []
-        sensorNames = []
-        sensorCategories = []
-        sensorMetadata = []
-
-        for row in result:
-                sensorIDs.append(row[0])
-                sensorNames.append(row[1])
-                sensorCategories.append(row[2])
-                sensorMetadata.append(row[3])
-
-        sensorData = {
-                "id":sensorIDs,
-                "names":sensorNames,
-                "categories":sensorCategories,
-                "metadata" : sensorMetadata
-
-            }
-
-        return jsonify(sensorData)
-
         
     except sqlite3.Error as error:
         return jsonify({

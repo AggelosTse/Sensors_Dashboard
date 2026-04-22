@@ -59,9 +59,9 @@ function SensorsTable() {
   }, []);
 
 
-  //sensors table on the control panel
+  //sensors table with all sensors on the control panel
   async function getSensorData() {
-    const response = await fetch("http://localhost:8001/getSensorsData?allData=false", {
+    const response = await fetch("http://localhost:8001/getSensorsData", {
       method: "GET",
       headers: {
         Accept: "application/json",

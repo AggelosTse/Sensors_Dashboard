@@ -89,9 +89,39 @@ function SensorChart({ values, timestamps }) {
 
 //shows all sensor data
 function ShowMetadata({ id }) {
+  const [sensorName,setSensorName] = useState("");
+  const [sensorCategory, setSensorCategory] = useState("");
+  const [sensorMetadata,setSensorMetadata] = useState("");
+
+
   useEffect(() => {
-    fetchSensorMeasurements(id);
+    fetchFullMetadata(id);
   }, [id]);
 
-  async function fetchFullMetadata() {}
+  async function fetchFullMetadata(id) {
+    const response = await fetch(
+      `http://localhost:8001/getChosenSensorData?id=${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+    if (response.ok) {
+      setSensorName(data.name);
+      setSensorCategory(data.category);
+      setSensorMetadata(data.metadata);
+    }
+  }
+
+  return(
+    <div>
+      <p>{sensorName}</p>
+      <p>{sensorCategory}</p>
+      <p>{sensorMetadata}</p>
+    </div>
+  )
 }
