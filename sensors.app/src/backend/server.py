@@ -251,7 +251,7 @@ def chosenSensorDataManager():
                 jsonify(
                     {
                         "messagetype": "Error",
-                        "message": f"Sensor with ID: {id} couldnt be found",
+                        "message": f"Sensor with ID: {sensor_id} couldnt be found",
                     }
                 ),
                 404,
@@ -362,6 +362,7 @@ def getsensorData():
             sqlConn.close()
 
 
+#measurement for a specific sensor (used for the more info graph)
 @app.route("/getMeasurements", methods=["GET"])
 def getMeasurementsManager():
 
@@ -386,6 +387,8 @@ def getMeasurementsManager():
             sensorTimeStampsList.append(row[1])
 
         sensorData = {"values": sensorValuesList, "timestamps": sensorTimeStampsList}
+
+        print(jsonify(sensorData))
         return jsonify(sensorData)
 
     except sqlite3.Error as error:
@@ -395,6 +398,42 @@ def getMeasurementsManager():
 
         if sqlConn:
             sqlConn.close()
+
+
+
+@app.route("/sensorNewDataStore", methods=["POST"])
+def sensorNewDataManager():
+
+    sqlConn = None
+
+    try:
+
+        data = request.get_json()
+        currentSensorID = data.get("sensorID")
+        currentSensorValue = data.get("sensorValue")
+        currentTimestamp = data.get("timestamp")
+        
+
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()
+
+        query = 'INSERT INTO measurements (value, timestamp, sensor_id) VALUES(?,?,?)'
+    
+        cursor.execute(query,(currentSensorValue,currentTimestamp,currentSensorID))
+    
+        sqlConn.commit() 
+
+        return jsonify({"message" : "Valid"}), 202
+    
+    except sqlite3.Error as error:
+            return jsonify({"messagetype": "Error", "message": str(error)}), 404
+
+    finally:
+
+            if sqlConn:
+                sqlConn.close()
+
+
 
 
 # USERS

@@ -25,7 +25,7 @@ ChartJS.register(
 
 export function SensorMoreInfo() {
   const location = useLocation();
-  const id = location.state;
+  const id = location.state.id;
 
   return (
     <div>
@@ -58,6 +58,7 @@ function Graph({ id }) {
 
     if (response.ok) {
       setSensorData(data);
+      console.log(data);
     }
   }
   if (!sensorData) {

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+import requests
 import random
 import time 
 import sqlite3
@@ -35,7 +35,7 @@ for row in result:
     sensorCategories.append(row[1])
 
 while True:
-    randomSensorIndex = random.randrange(1,len(sensorIDs))
+    randomSensorIndex = random.randrange(0,len(sensorIDs))
     
     currentSensorID = sensorIDs[randomSensorIndex]
     currentSensorCategory = sensorCategories[randomSensorIndex]
@@ -48,10 +48,17 @@ while True:
     
     timestamp = time.time()
     
-    query = 'INSERT INTO measurements (value, timestamp, sensor_id) VALUES(?,?,?)'
-    
-    cursor.execute(query,(randomValue,timestamp,currentSensorID))
-    
-    sqlConn.commit() 
-    
-    time.sleep(5)
+    sensorNewData = {
+            "sensorID" : currentSensorID,
+            "sensorValue" : randomValue,
+            "timestamp" : timestamp
+        }
+
+    try:
+
+        res = requests.post("http://localhost:8001/sensorNewDataStore",json= sensorNewData)
+        
+    except Exception as error:
+            print(error)
+
+    time.sleep(15)
