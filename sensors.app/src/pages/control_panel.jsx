@@ -78,7 +78,7 @@ export function ControlPanel() {
     <div>
       <Boxes sensorInfoStats={sensorInfoStats} />
 
-      <SensorGraphs sensorList = {sensorList} sensorInfoStats = {sensorInfoStats} />
+      <SensorGraphs sensorList={sensorList} sensorInfoStats={sensorInfoStats} />
 
       {role === "admin" && <AddSensorButton />}
 
@@ -127,7 +127,7 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
     datasets: [
       {
         label: "Μέση Τιμή",
-        data: [sensorInfoStats[2], sensorInfoStats[3]], 
+        data: [sensorInfoStats[2], sensorInfoStats[3]],
         backgroundColor: ["rgba(255, 99, 132, 0.5)", "rgba(54, 162, 235, 0.5)"],
         borderColor: ["rgb(255, 99, 132)", "rgb(54, 162, 235)"],
         borderWidth: 1,
