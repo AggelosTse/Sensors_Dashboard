@@ -319,7 +319,7 @@ def editSensorManager():
             sqlConn.close()
 
 
-# returns all sensors for the control panel
+# returns all sensors and some of their info for the control panel
 @app.route("/getSensorsData", methods=["GET"])
 def getsensorData():
 
@@ -328,8 +328,10 @@ def getsensorData():
     try:
 
         sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()  # executes sql commands
+        cursor = sqlConn.cursor()  
 
+
+        #sensor data for the control panel sensor table
         query = """ SELECT s.id,s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id"""
 
         cursor.execute(query)
@@ -345,10 +347,48 @@ def getsensorData():
             sensorNames.append(row[1])
             sensorCategories.append(row[2])
 
+        #sensor info for the control panel graphs etc
+
+        query = "SELECT COUNT(*) FROM sensors"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        sumOfSensors = result[0]
+
+        query = "SELECT COUNT(*) FROM measurements"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        sumOfMeasurements = result[0]
+        
+        query = """
+            SELECT c.category, AVG(m.value) 
+            FROM sensor_categories c
+            JOIN sensors s ON s.category_id = c.id
+            JOIN measurements m ON m.sensor_id = s.id
+            GROUP BY c.category
+        """
+        cursor.execute(query)
+        result = cursor.fetchall() 
+        
+        avg_values = {}
+        for row in result:
+            avg_values[row[0]] = round(row[1], 2) #row[0] sensor name, row[1] values mean
+
+
         sensorData = {
-            "id": sensorIDs,
-            "names": sensorNames,
-            "categories": sensorCategories,
+            "sensorTable": {
+                "id": sensorIDs,
+                "names": sensorNames,
+                "categories": sensorCategories
+            },
+
+            "sensorInfoStats" : {
+                "sumOfSensors" : sumOfSensors,
+                "sumOfMeasurements": sumOfMeasurements,
+                "avgTemp" : avg_values.get("Temperature", 0),
+                "avgHumid" : avg_values.get("Humidity", 0)
+
+            }
+
         }
 
         return jsonify(sensorData)

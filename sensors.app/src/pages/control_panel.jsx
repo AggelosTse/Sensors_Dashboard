@@ -3,33 +3,156 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
+import { Pie, Bar } from "react-chartjs-2";
+
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
+} from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+
 export function ControlPanel() {
   const role = localStorage.getItem("role");
+  const navig = useNavigate();
 
-  //fetch data for sensor statistics
+  const [sensorInfoStats, setSensorInfoStats] = useState([])
+
+  const [sensorList, setSensorlist] = useState([]);
+
+  const [errorOccured, setErrorOccured] = useState(false);
+  const [serverMessage, setMessage] = useState("");
+
+
+  useEffect(() => {
+    //load data when page loads
+    setErrorOccured(false);
+    getSensorData();
+
+  }, []);
+
+
+  async function getSensorData() {
+    const response = await fetch("http://localhost:8001/getSensorsData", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setErrorOccured(false);
+
+
+      let infoStats = []
+      infoStats.push(data.sensorInfoStats.sumOfSensors)
+      infoStats.push(data.sensorInfoStats.sumOfMeasurements)
+      infoStats.push(data.sensorInfoStats.avgTemp)
+      infoStats.push(data.sensorInfoStats.avgHumid)
+
+      setSensorInfoStats(infoStats)
+
+
+      const combined = data.sensorTable.names.map((sensorName, index) => ({
+        id: data.sensorTable.id[index],
+        name: sensorName,
+        category: data.sensorTable.categories[index]
+      }));
+      setSensorlist(combined);
+
+    }
+    else {
+      setErrorOccured(true);
+      setMessage(data.message);
+    }
+  }
 
   return (
     <div>
-      <Boxes />
+      <Boxes sensorInfoStats={sensorInfoStats} />
+
+      <SensorGraphs sensorList = {sensorList} sensorInfoStats = {sensorInfoStats} />
 
       {role === "admin" && <AddSensorButton />}
-      <SensorsTable />
+
+      <SensorsTable sensorList={sensorList} errorOccured={errorOccured} navig={navig} role={role} />
 
       {role === "admin" && <UsersList />}
     </div>
   );
 }
 
-function Boxes() {
+function Boxes({ sensorInfoStats }) {
   return (
     <div className="boxes-container">
-      <div className="boxes">Box 1 </div>
-      <div className="boxes">Box 1 </div>
+      <div className="boxes">TOTAL SENSORS: {sensorInfoStats[0]} </div>
+      <div className="boxes">TOTAL MEASUREMENTS: {sensorInfoStats[1]} </div>
+      <div className="boxes">AVERAGE TEMPERATURE: {sensorInfoStats[2]} </div>
+      <div className="boxes">AVERAGE HUMIDITY: {sensorInfoStats[3]} </div>
 
-      <div className="boxes">Box 1 </div>
     </div>
   );
 }
+
+function SensorGraphs({ sensorList, sensorInfoStats }) {
+
+  //counts is a dict
+  const counts = sensorList.reduce((acc, s) => {
+    acc[s.category] = (acc[s.category] || 0) + 1;  //format "humidity" : 4 
+    return acc;
+  }, {});
+
+
+  const pieData = {
+    labels: Object.keys(counts),
+    datasets: [
+      {
+        label: "Πλήθος Αισθητήρων",
+        data: Object.values(counts),
+        backgroundColor: ["#4bc0c0", "#36a2eb", "#ffcd56", "#ff6384"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const barData = {
+    labels: ["Θερμοκρασία (°C)", "Υγρασία (%)"],
+    datasets: [
+      {
+        label: "Μέση Τιμή",
+        data: [sensorInfoStats[2], sensorInfoStats[3]], 
+        backgroundColor: ["rgba(255, 99, 132, 0.5)", "rgba(54, 162, 235, 0.5)"],
+        borderColor: ["rgb(255, 99, 132)", "rgb(54, 162, 235)"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  return (
+    <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", marginTop: "40px" }}>
+      <div style={{ width: "350px" }}>
+        <h3>Κατανομή Αισθητήρων</h3>
+        <Pie data={pieData} />
+      </div>
+      <div style={{ width: "450px" }}>
+        <h3>Μέσοι Όροι Μετρήσεων</h3>
+        <Bar data={barData} options={{ responsive: true }} />
+      </div>
+    </div>
+  );
+
+  return {
+
+  }
+}
+
 
 
 function AddSensorButton() {
@@ -43,46 +166,12 @@ function AddSensorButton() {
 
 
 
-function SensorsTable() {
-    const navig = useNavigate();    
-
-  const [sensorList, setSensorlist] = useState([]);
-
-  const [errorOccured, setErrorOccured] = useState(false);
-  const [serverMessage, setMessage] = useState("");
-
-  useEffect(() => {
-    //load data when page loads
-    setErrorOccured(false);
-    getSensorData();
-
-  }, []);
+//sensors table with all sensors on the control panel
+function SensorsTable({ sensorList, errorOccured, navig, role }) {
 
 
-  //sensors table with all sensors on the control panel
-  async function getSensorData() {
-    const response = await fetch("http://localhost:8001/getSensorsData", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setErrorOccured(false);
-      const combined = data.names.map((sensorName, index) => ({
-        id: data.id[index],
-        name: sensorName,
-        category: data.categories[index]
-      }));
-      setSensorlist(combined);
-    }
-    else {
-      setErrorOccured(true);
-      setMessage(data.message);
-    }
-  }
+
+
 
   if (errorOccured) {
     return (
@@ -119,6 +208,7 @@ function SensorsTable() {
                 <th>id</th>
                 <th>Name</th>
                 <th>Category</th>
+
               </tr>
             </thead>
             <tbody>
@@ -128,29 +218,32 @@ function SensorsTable() {
                   <td>{sensor.name}</td>
                   <td>{sensor.category}</td>
                   <td>
-                    <button
-                      onClick={() =>
-                        navig("/edit_sensor", {
-                          state: {
-                            id: sensor.id
-                          },
-                        })
-                      }
-                    >
-                      Edit
-                    </button>
+
+                    {role === "admin" && (
+                      <button
+                        onClick={() =>
+                          navig("/edit_sensor", {
+                            state: {
+                              id: sensor.id,
+                            },
+                          })
+                        }
+                      >
+                        Edit
+                      </button>
+                    )}
                   </td>
                   <td>
                     <button onClick={() =>
-                        navig("/sensorMoreInfo", {
-                          state: {
-                            id: sensor.id
-                          },
-                        })
-                      }>
-                        More Info
+                      navig("/sensorMoreInfo", {
+                        state: {
+                          id: sensor.id
+                        },
+                      })
+                    }>
+                      More Info
                     </button>
-                  
+
                   </td>
                 </tr>
               ))}
