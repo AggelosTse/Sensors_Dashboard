@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { useAuth } from "../authContext";
+
 export function EditSensor() {
   const location = useLocation();
   const userdata = location.state;
@@ -17,6 +19,8 @@ export function EditSensor() {
 
   const navig = useNavigate();
 
+  const {token} = useAuth();
+
   useEffect(() => {
     if (userdata) {
       setSensorID(userdata.id || "");
@@ -30,6 +34,7 @@ export function EditSensor() {
       {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -67,6 +72,7 @@ export function EditSensor() {
     const response = await fetch("http://localhost:8001/editSensor", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -150,8 +156,13 @@ function ChosenSensorData({
     </div>
   );
 }
-function AvailableCategories({ category, setCategory }) {
+
+
+function AvailableCategories({ category, setCategory}) {
+
   const [categories, setCategories] = useState([]);
+
+  const {token} = useAuth();
 
   useEffect(() => {
     fetchSensorCategories();
@@ -161,6 +172,7 @@ function AvailableCategories({ category, setCategory }) {
     const response = await fetch("http://localhost:8001/getSensorCategories", {
       method: "GET",
       headers: {
+        "Authorization": `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../authContext";
+
 
 export function AddSensors() {
 
@@ -15,32 +17,27 @@ export function AddSensors() {
 
     const navig = useNavigate();
 
+    const {token} = useAuth()
+
     async function handleAddSensor() {
+
         if (sending) return; //if true, button is already doing a task
 
-        setSending(true);
-        console.log(name, metadata, category);
+        setSending(true); 
 
-        if (
-            !name.trim() ||
-            !metadata.trim() ||
-            !category.trim()
-
-        ) {
-            setTimeout(() => {
-                setMessage("Missing Input");
-                setMessageType("Error");
-            }, 700);
-
-            setTimeout(() => {
-                setSending(false);
-            }, 2200);
+        if ( !name.trim() ||!metadata.trim() ) {
+            setMessage("Missing Input");
+            serverMessageType("Failure");
             return;
+        }
+
+        setSending(true);
         }
 
         const response = await fetch("http://localhost:8001/addsensor", {
             method: "POST",
             headers: {
+                "Authorization": `Bearer ${token}`,
                 Accept: "application/json",
                 "Content-Type": "application/json",
             },
@@ -61,16 +58,8 @@ export function AddSensors() {
                 setSending(false);
                 navig("/control_panel");
             }, 2200);
-        } else {
-            setTimeout(() => {
-                setMessage(data.message);
-                setMessageType(data.messagetype);
-            }, 700);
-
-            setTimeout(() => {
-                setSending(false);
-            }, 2200);
         }
+        
     }
 
 

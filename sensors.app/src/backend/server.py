@@ -1,14 +1,55 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,make_response
 from flask_cors import CORS
 import sqlite3
 import os
+import jwt
+import datetime
+from functools import wraps
 
 app = Flask(__name__)
 
-CORS(app)
+#allows authentication on requests
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(base_dir, "database", "sensorsDashBoard.db")
+
+
+app.config['SECRET_KEY'] = 'your_super_secret_safe_key'
+
+
+
+def token_required(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        token = None
+      
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+        
+            token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+
+        if not token:
+            return make_response(jsonify({"message": "A valid token is missing!"}), 401)
+
+        try:
+    
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+           
+            current_user_username = data['username']
+            current_user_role = data['role']
+        except jwt.ExpiredSignatureError:
+            return make_response(jsonify({"message": "Token has expired!"}), 401)
+        except jwt.InvalidTokenError:
+            return make_response(jsonify({"message": "Invalid token!"}), 401)
+        except Exception as e:
+            return make_response(jsonify({"message": str(e)}), 401)
+
+
+        return f(current_user_username, current_user_role, *args, **kwargs)
+
+    return decorator
+
 
 
 @app.route("/loginValidation", methods=["POST"])
@@ -17,9 +58,9 @@ def logInvalidate():
     try:
 
         sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()  # executes sql commands
+        cursor = sqlConn.cursor() 
 
-        data = request.get_json()  # request data
+        data = request.get_json()  
         username = data.get("username")
         password = data.get("password")
 
@@ -35,37 +76,42 @@ def logInvalidate():
 
         cursor.execute(query, (username,))
 
-        result = (
-            cursor.fetchone()
-        )  # afou username kleidi, enas mono tha mporei na to exei
+        result = cursor.fetchone()
 
         if result is None:
             return (
                 jsonify(
                     {
                         "messagetype": "Error",
-                        "message": "No accounts with that name exist yet",
+                        "message": "No accounts with that name exist yet"
                     }
-                ),
-                404,
+                ),404
             )
-
+        
         if result[0] != password:
-            return (
-                jsonify(
-                    {"messagetype": "Error", "message": "Wrong password. Try again"}
-                ),
-                404,
-            )
-        else:
+            return jsonify({"messagetype": "Error", "message": "Wrong password. Try again"}),404
+            
+        role = result[1]
 
-            role = result[1]
-            return (
-                jsonify(
-                    {"messagetype": "Valid", "message": "Logging in", "role": role}
-                ),
-                200,
-            )
+
+        payload = {
+        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24),
+        'username': username,        
+        "role": role
+        }
+
+
+        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
+
+
+        return jsonify({
+            "messagetype": "Valid", 
+            "message": "Logging in",
+            "role": role,
+            "token" : token
+            }),200
+
+
 
     except sqlite3.Error as error:
         return jsonify({"messagetype": "Error", "message": str(error)}), 404
@@ -98,7 +144,7 @@ def signUpmanager():
 
         result = (
             cursor.fetchone()
-        )  # afou username kleidi, enas mono tha mporei na to exei
+        )  
 
         if result is not None:
             # username already exists, try another one
@@ -156,7 +202,11 @@ def signUpmanager():
 
 
 @app.route("/getSensorCategories", methods=["GET"])
-def sensorCategoriesManager():
+@token_required
+def sensorCategoriesManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
 
     sqlConn = None
     try:
@@ -185,7 +235,12 @@ def sensorCategoriesManager():
 
 
 @app.route("/addsensor", methods=["POST"])
-def addSensorManager():
+@token_required
+def addSensorManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+
 
     sqlConn = None
 
@@ -230,7 +285,13 @@ def addSensorManager():
 
 # gets data from specific sensor
 @app.route("/getChosenSensorData", methods=["GET"])
-def chosenSensorDataManager():
+@token_required
+def chosenSensorDataManager(username,role):
+
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+
 
     sqlConn = None
     try:
@@ -279,7 +340,11 @@ def chosenSensorDataManager():
 
 
 @app.route("/editSensor", methods=["POST"])
-def editSensorManager():
+@token_required
+def editSensorManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
 
     sqlConn = None
     try:
@@ -321,7 +386,8 @@ def editSensorManager():
 
 # returns all sensors and some of their info for the control panel
 @app.route("/getSensorsData", methods=["GET"])
-def getsensorData():
+@token_required
+def getsensorData(username,role):
 
     sqlConn = None
 
@@ -404,7 +470,8 @@ def getsensorData():
 
 #measurement for a specific sensor (used for the more info graph)
 @app.route("/getMeasurements", methods=["GET"])
-def getMeasurementsManager():
+@token_required
+def getMeasurementsManager(username,role):
 
     sqlConn = None
 
@@ -442,8 +509,12 @@ def getMeasurementsManager():
 
 
 @app.route("/sensorNewDataStore", methods=["POST"])
-def sensorNewDataManager():
+@token_required
+def sensorNewDataManager(username,role):
 
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
     sqlConn = None
 
     try:
@@ -480,8 +551,12 @@ def sensorNewDataManager():
 
 
 @app.route("/getUserRoles", methods=["GET"])
-def getRoles():
+@token_required
+def getRoles(username,role):
 
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
     sqlConn = None
     try:
 
@@ -515,7 +590,11 @@ def getRoles():
 
 
 @app.route("/adduser", methods=["POST"])
-def addUserManager():
+@token_required
+def addUserManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
 
     sqlConn = None
     try:
@@ -584,9 +663,14 @@ def addUserManager():
             sqlConn.close()
 
 
+#get all users data for the users table
 @app.route("/getUserData", methods=["GET"])
-def getuserdata():
+@token_required
+def getuserdata(username,role):
 
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
     sqlConn = None
     try:
 
@@ -639,9 +723,75 @@ def getuserdata():
             sqlConn.close()
 
 
-@app.route("/edituser", methods=["POST"])
-def editUserManager():
+@app.route("/getChosenUserData", methods=["GET"])
+@token_required
+def chosenUserManager(username,role):
 
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
+    sqlConn = None
+    try:
+        user_id = request.args.get("id")
+
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor() 
+
+        query = " SELECT u.username,u.password,u.email,u.fullName, r.role FROM users u JOIN roles r ON u.role_id  = r.id WHERE u.id = ?"
+
+        cursor.execute(query, (user_id,))
+
+        result = cursor.fetchone()
+
+        if result is None:
+
+            return (
+                jsonify(
+                    {
+                        "messagetype": "Error",
+                        "message": f"User with ID: {user_id} couldnt be found"
+                    }
+                ),
+                404,
+            )
+
+        userName = result[0]
+        userPass = result[1]
+        userEmail = result[2]
+        userFullName = result[3]
+
+
+        userData = {
+            "username": userName,
+            "password": userPass,
+            "email": userEmail,
+            "fullName" : userFullName
+        }
+
+        return jsonify(userData)
+
+    except sqlite3.Error as error:
+        return jsonify({"message": str(error)}), 404
+
+    finally:
+
+        if sqlConn:
+            sqlConn.close()
+
+    
+
+
+
+
+
+
+@app.route("/edituser", methods=["POST"])
+@token_required
+def editUserManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
     sqlConn = None
     try:
         data = request.get_json()
@@ -689,8 +839,14 @@ def editUserManager():
             sqlConn.close()
 
 
+
 @app.route("/deleteuser", methods=["POST"])
-def deleteUserManager():
+@token_required
+def deleteUserManager(username,role):
+
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
 
     sqlConn = None
     try:

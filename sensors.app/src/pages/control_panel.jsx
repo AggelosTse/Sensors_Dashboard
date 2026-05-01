@@ -1,26 +1,19 @@
 import "../styles/control_panel.css";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+
+import { useAuth } from "./authContext";
+
 import Swal from "sweetalert2";
 
 import { Pie, Bar } from "react-chartjs-2";
 
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
+
 export function ControlPanel() {
-  const role = localStorage.getItem("role");
-  const navig = useNavigate();
 
   const [sensorInfoStats, setSensorInfoStats] = useState([])
 
@@ -29,6 +22,7 @@ export function ControlPanel() {
   const [errorOccured, setErrorOccured] = useState(false);
   const [serverMessage, setMessage] = useState("");
 
+  const { role, token } = useAuth();
 
   useEffect(() => {
     //load data when page loads
@@ -42,6 +36,7 @@ export function ControlPanel() {
     const response = await fetch("http://localhost:8001/getSensorsData", {
       method: "GET",
       headers: {
+        "Authorization": `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -80,9 +75,7 @@ export function ControlPanel() {
 
       <SensorGraphs sensorList={sensorList} sensorInfoStats={sensorInfoStats} />
 
-      {role === "admin" && <AddSensorButton />}
-
-      <SensorsTable sensorList={sensorList} errorOccured={errorOccured} navig={navig} role={role} />
+      <SensorsTable sensorList={sensorList} errorOccured={errorOccured} serverMessage={serverMessage} />
 
       {role === "admin" && <UsersList />}
     </div>
@@ -148,116 +141,62 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
     </div>
   );
 
-  return {
-
-  }
 }
-
-
-
-function AddSensorButton() {
-  const navig = useNavigate();
-
-  return (
-    <button onClick={() => navig("/addSensor")}>Add Sensor</button>
-  )
-}
-
-
-
 
 //sensors table with all sensors on the control panel
-function SensorsTable({ sensorList, errorOccured, navig, role }) {
+function SensorsTable({ sensorList, errorOccured, serverMessage }) {
 
+  const navig = useNavigate();
+  const { role } = useAuth();
 
-
-
-
-  if (errorOccured) {
-    return (
+  return (
+    <div>
+      {role === "admin" && (<button onClick={() => navig("/addSensor")}>Add Sensor</button>)}
       <div>
-
-        <div>
-          <table>
-            <thead>
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Actions</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {errorOccured ? (
               <tr>
-                <th>Name</th>
-                <th>Category</th>
-
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan="2" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                <td colSpan="5" style={{ textAlign: "center", color: "red", padding: "20px" }}>
                   {serverMessage}
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
-  }
-  else {
-    return (
-      <div>
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>id</th>
-                <th>Name</th>
-                <th>Category</th>
-
-              </tr>
-            </thead>
-            <tbody>
-              {sensorList.map((sensor, index) => (
-                <tr key={index}>
+            ) : (
+              sensorList.map((sensor, index) => (
+                <tr key={sensor.id || index}>
                   <td>{sensor.id}</td>
                   <td>{sensor.name}</td>
                   <td>{sensor.category}</td>
                   <td>
-
                     {role === "admin" && (
-                      <button
-                        onClick={() =>
-                          navig("/edit_sensor", {
-                            state: {
-                              id: sensor.id,
-                            },
-                          })
-                        }
-                      >
+                      <button onClick={() => navig("/edit_sensor", { state: { id: sensor.id } })}>
                         Edit
                       </button>
                     )}
                   </td>
                   <td>
-                    <button onClick={() =>
-                      navig("/sensorMoreInfo", {
-                        state: {
-                          id: sensor.id
-                        },
-                      })
-                    }>
+                    <button onClick={() => navig("/sensorMoreInfo", { state: { id: sensor.id } })}>
                       More Info
                     </button>
-
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
-    );
-  }
+    </div>
+  );
 }
-
-
-
-
 
 
 function UsersList() {
@@ -266,6 +205,9 @@ function UsersList() {
   const [serverMessage, setMessage] = useState("");
 
   const navig = useNavigate();
+
+  const { token } = useAuth();
+
 
   useEffect(() => {
     //load data when page loads
@@ -278,6 +220,7 @@ function UsersList() {
     const response = await fetch("http://localhost:8001/getUserData", {
       method: "GET",
       headers: {
+        "Authorization": `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -315,6 +258,7 @@ function UsersList() {
         const response = await fetch("http://localhost:8001/deleteuser", {
           method: "POST",
           headers: {
+            "Authorization": `Bearer ${token}`,
             Accept: "application/json",
             "Content-Type": "application/json",
           },
@@ -346,7 +290,6 @@ function UsersList() {
     });
   };
 
-
   if (errorOccured) {
     return (
       <div>
@@ -374,62 +317,40 @@ function UsersList() {
       </div>
     );
   }
-  else {
-    return (
+
+  return (
+    <div>
+      <button onClick={() => navig("/add_user")}>add user</button>
+
       <div>
-        <button onClick={() => navig("/add_user")}>add user</button>
-
-        <div>
-          <table>
-            <thead>
-              <tr>
-                <th>id</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Actions</th>
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {userlist.map((user, index) => (
+              <tr key={index}>
+                <td>{user.id}</td>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>
+                  <button onClick={() => navig("/edit_user", { state: { id: user.id, }, })}>Edit</button>
+                  <button onClick={() => { confirmationWndow(user.id); }}> Delete </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {userlist.map((user, index) => (
-                <tr key={index}>
-                  <td>{user.id}</td>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <button
-                      onClick={() =>
-                        navig("/edit_user", {
-                          state: {
-                            id: user.id,
-                            username: user.username,
-                            email: user.email,
-                            password: user.password,
-                            fullname: user.fullname,
-                            role: user.role,
-                          },
-                        })
-                      }
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        confirmationWndow(user.id);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
-    );
-  }
-
+    </div>
+  );
 }
+
 

@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./authContext";
+
 
 export function LoginPage() {
   const navig = useNavigate();
+
+  const { login } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -48,7 +52,7 @@ export function LoginPage() {
       setMessage(data.message);
       setMessageType(data.messagetype);
 
-      localStorage.setItem("role", data.role);
+      login(data.token, data.role);
 
       setTimeout(() => {
         //navigating to dashboard page after 4 seconds

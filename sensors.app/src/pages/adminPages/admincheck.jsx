@@ -1,14 +1,23 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../authContext";
 
 export function ProtectedRoute({ roleAllowed }) {
-  const role = localStorage.getItem("role");
+  const { token, role, loading } = useAuth();
 
-   
-  //if user's role isnt admin go back to login
-  if (roleAllowed!==role){
+
+  if (loading) return <div>Loading...</div>;
+
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+
+  if (roleAllowed && role !== roleAllowed) {
+
     return <Navigate to="/control_panel" replace />;
   }
 
-  //if not a user, he is a admin, so it redirects to the admin endpoints
+
   return <Outlet />;
 }

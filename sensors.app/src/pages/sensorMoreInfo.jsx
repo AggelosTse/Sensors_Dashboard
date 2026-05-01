@@ -2,26 +2,11 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import { useAuth } from "./authContext";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export function SensorMoreInfo() {
   const location = useLocation();
@@ -39,6 +24,8 @@ export function SensorMoreInfo() {
 function Graph({ id }) {
   const [sensorData, setSensorData] = useState(null);
 
+  const { token } = useAuth();
+
   useEffect(() => {
     fetchSensorMeasurements(id);
   }, [id]);
@@ -49,6 +36,7 @@ function Graph({ id }) {
       {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${token}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },
@@ -90,10 +78,11 @@ function SensorChart({ values, timestamps }) {
 
 //shows all sensor data
 function ShowMetadata({ id }) {
-  const [sensorName,setSensorName] = useState("");
+  const [sensorName, setSensorName] = useState("");
   const [sensorCategory, setSensorCategory] = useState("");
-  const [sensorMetadata,setSensorMetadata] = useState("");
+  const [sensorMetadata, setSensorMetadata] = useState("");
 
+  const { token } = useAuth();
 
   useEffect(() => {
     fetchFullMetadata(id);
@@ -105,6 +94,7 @@ function ShowMetadata({ id }) {
       {
         method: "GET",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -118,7 +108,7 @@ function ShowMetadata({ id }) {
     }
   }
 
-  return(
+  return (
     <div>
       <p>{sensorName}</p>
       <p>{sensorCategory}</p>

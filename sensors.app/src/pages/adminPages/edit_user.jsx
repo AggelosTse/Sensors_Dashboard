@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { useAuth } from "../authContext";
+
 export function EditUser() {
 
   const location = useLocation();
   const userdata = location.state;
 
+  const [userID, setUserID] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -19,16 +22,38 @@ export function EditUser() {
 
   const navig = useNavigate();
 
-  //filling the fields when the page loads
+  const { token } = useAuth();
+
   useEffect(() => {
     if (userdata) {
-      setUsername(userdata.username || "");
-      setPassword(userdata.password || "");
-      setEmail(userdata.email || "");
-      setFullName(userdata.fullname || "");
-      setRole(userdata.role) || "";
+      setUserID(userdata.id || "");
     }
+    getChosenUserData(userdata.id);
   }, [userdata]);
+
+  async function getChosenUserData(id) {
+    const response = await fetch(
+      `http://localhost:8001/getChosenUserData?id=${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+
+
+
+
+    );
+    const data = await response.json();
+    if (response.ok) {
+      setUsername(data.username);
+      setPassword(data.password);
+      setEmail(data.email);
+      setFullName(data.fullName);
+    }
+  }
 
   async function submitButton() {
     if (sending) return; //if true, button is already doing a task
@@ -55,6 +80,7 @@ export function EditUser() {
     const response = await fetch("http://localhost:8001/edituser", {
       method: "POST",
       headers: {
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -66,6 +92,8 @@ export function EditUser() {
         role: role,
       }),
     });
+
+    const data = await response.json();
 
     if (response.ok) {
       setMessage(data.message);
@@ -85,7 +113,7 @@ export function EditUser() {
         setSending(false);
       }, 2200);
     }
-    
+
   }
 
   return (
@@ -158,7 +186,9 @@ function ChosenUserData({
 
 function AvailableRoles({ role, setRole }) {
 
-    const [userRole,setUserRole] = useState([]);
+  const [userRole, setUserRole] = useState([]);
+
+  const { token } = useAuth();
 
   useEffect(() => {
     fetchAvailableRoles();
@@ -169,6 +199,7 @@ function AvailableRoles({ role, setRole }) {
     const response = await fetch("http://localhost:8001/getUserRoles", {
       method: "GET",
       headers: {
+        "Authorization": `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -179,7 +210,7 @@ function AvailableRoles({ role, setRole }) {
       setUserRole(data)
     }
   }
-  
+
   return (
     <div>
       <label htmlFor="options">user role</label> <br />
