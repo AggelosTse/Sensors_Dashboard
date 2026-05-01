@@ -17,36 +17,38 @@ export function AddSensors() {
 
     const navig = useNavigate();
 
-    const {token} = useAuth()
+    const { token } = useAuth()
 
     async function handleAddSensor() {
 
         if (sending) return; //if true, button is already doing a task
 
-        setSending(true); 
+        setSending(true);
 
-        if ( !name.trim() ||!metadata.trim() ) {
+        if (!name.trim() || !metadata.trim()) {
             setMessage("Missing Input");
-            serverMessageType("Failure");
+            setMessageType("Failure");
             return;
         }
 
-        setSending(true);
+        try {
+            const response = await fetch("http://localhost:8001/addsensor", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: name,
+                    metadata: metadata,
+                    category: category
+                }),
+            });
+        } catch (error) {
+            setMessage(error);
+            setMessageType("Error");
         }
-
-        const response = await fetch("http://localhost:8001/addsensor", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: name,
-                metadata: metadata,
-                category: category
-            }),
-        });
 
         const data = await response.json();
         if (response.ok) {
@@ -59,9 +61,13 @@ export function AddSensors() {
                 navig("/control_panel");
             }, 2200);
         }
-        
-    }
+        else {
+            setMessage(data.message);
+            setMessageType(data.messagetype);
+            setSending(false);
+        }
 
+    }
 
     return (
         <div>
@@ -86,16 +92,8 @@ export function AddSensors() {
 function Logo() {
     return <h1>ADD SENSOR</h1>;
 }
-function Fields({
-    name,
-    setName,
-    metadata,
-    setMetadata,
-    category,
-    setCategory,
-    handleAddSensor,
-    sending
-}) {
+
+function Fields({ name, setName, metadata, setMetadata, category, setCategory, handleAddSensor, sending }) {
     return (
         <div>
             <input

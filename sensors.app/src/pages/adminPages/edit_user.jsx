@@ -9,6 +9,7 @@ export function EditUser() {
   const userdata = location.state;
 
   const [userID, setUserID] = useState("");
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -41,17 +42,15 @@ export function EditUser() {
           "Content-Type": "application/json",
         },
       }
-
-
-
-
     );
+
     const data = await response.json();
     if (response.ok) {
       setUsername(data.username);
       setPassword(data.password);
       setEmail(data.email);
       setFullName(data.fullName);
+      
     }
   }
 
@@ -60,20 +59,9 @@ export function EditUser() {
 
     setSending(true);
 
-    if (
-      !username.trim() ||
-      !password.trim() ||
-      !email.trim() ||
-      !fullName.trim()
-    ) {
-      setTimeout(() => {
-        setMessage("Missing Input");
-        setMessageType("Error");
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+    if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim()) {
+      setMessage("Missing Input");
+      setMessageType("Error");
       return;
     }
 
@@ -104,14 +92,8 @@ export function EditUser() {
         navig("/control_panel");
       }, 2200);
     } else {
-      setTimeout(() => {
-        setMessage(data.message);
-        setMessageType(data.messagetype);
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+      setMessage(data.message);
+      setMessageType(data.messagetype);
     }
 
   }
@@ -139,17 +121,7 @@ export function EditUser() {
 }
 
 
-function ChosenUserData({
-  username,
-  setUsername,
-  password,
-  setPassword,
-  email,
-  setEmail,
-  fullName,
-  setFullName,
-}) {
-
+function ChosenUserData({ username, setUsername, password, setPassword, email, setEmail, fullName, setFullName, }) {
 
   return (
     <div>

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Line } from "react-chartjs-2";
-
 import { useAuth } from "./authContext";
-
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -46,7 +44,6 @@ function Graph({ id }) {
 
     if (response.ok) {
       setSensorData(data);
-      console.log(data);
     }
   }
   if (!sensorData) {

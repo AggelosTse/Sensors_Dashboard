@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
 import { useAuth } from "../authContext";
 
 export function EditSensor() {
@@ -19,7 +18,7 @@ export function EditSensor() {
 
   const navig = useNavigate();
 
-  const {token} = useAuth();
+  const { token } = useAuth();
 
   useEffect(() => {
     if (userdata) {
@@ -53,19 +52,9 @@ export function EditSensor() {
 
     setSending(true);
 
-    if (
-      !sensorName.trim() ||
-      !sensorCategory.trim() ||
-      !sensorMetadata.trim()
-    ) {
-      setTimeout(() => {
-        setMessage("Missing Input");
-        setMessageType("Error");
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+    if (!sensorName.trim() || !sensorCategory.trim() || !sensorMetadata.trim()) {
+      setMessage("Missing Input");
+      setMessageType("Error");
       return;
     }
 
@@ -89,18 +78,15 @@ export function EditSensor() {
       setMessageType(data.messagetype);
 
       setTimeout(() => {
+
         setSending(false);
         navig("/control_panel");
       }, 2200);
-    } else {
-      setTimeout(() => {
-        setMessage(data.message);
-        setMessageType(data.messagetype);
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+    }
+    else {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+      setSending(false);
     }
   }
 
@@ -132,12 +118,7 @@ function Logo() {
   return <h1> EDIT SENSOR</h1>;
 }
 
-function ChosenSensorData({
-  sensorName,
-  setSensorName,
-  sensorMetadata,
-  setSensorMetadata,
-}) {
+function ChosenSensorData({ sensorName, setSensorName, sensorMetadata, setSensorMetadata, }) {
   return (
     <div>
       <input
@@ -158,11 +139,11 @@ function ChosenSensorData({
 }
 
 
-function AvailableCategories({ category, setCategory}) {
+function AvailableCategories({ category, setCategory }) {
 
   const [categories, setCategories] = useState([]);
 
-  const {token} = useAuth();
+  const { token } = useAuth();
 
   useEffect(() => {
     fetchSensorCategories();

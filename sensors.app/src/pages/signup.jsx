@@ -20,20 +20,9 @@ export function SignUpPage() {
 
     setSending(true);
 
-    if (
-      !username.trim() ||
-      !password.trim() ||
-      !email.trim() ||
-      !fullName.trim()
-    ) {
-      setTimeout(() => {
-        setMessage("Missing Input");
-        setMessageType("Error");
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+    if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim()) {
+      setMessage("Missing Input");
+      setMessageType("Error");
       return;
     }
 
@@ -56,20 +45,17 @@ export function SignUpPage() {
       setMessage(data.message);
       setMessageType(data.messagetype);
 
-      setTimeout(() => {
-        //navigating to login page after 4 seconds
-        setSending(false);
-        navig("/"); //navigate to login
-      }, 2200);
-    } else {
-      setTimeout(() => {
-        setMessage(data.message);
-        setMessageType(data.messagetype);
-      }, 700);
+      login(data.token, data.role);
 
       setTimeout(() => {
         setSending(false);
+        navig("/");
       }, 2200);
+    }
+    else {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+      setSending(false);
     }
   }
 

@@ -22,17 +22,10 @@ export function LoginPage() {
     setSending(true);
 
     if (!username.trim() || !password.trim()) {
-      setTimeout(() => {
         setMessage("Missing Input");
         setMessageType("Error");
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
-
-      return;
-    }
+        return;
+      }
 
     const response = await fetch("http://localhost:8001/loginValidation", {
       method: "POST",
@@ -55,19 +48,14 @@ export function LoginPage() {
       login(data.token, data.role);
 
       setTimeout(() => {
-        //navigating to dashboard page after 4 seconds
         setSending(false);
         navig("/control_panel");
-      }, 4000);
-    } else {
-      setTimeout(() => {
-        setMessage(data.message);
-        setMessageType(data.messagetype);
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
       }, 2200);
+    }
+    else {
+      setMessage(data.message);
+      setMessageType(data.messagetype);
+      setSending(false);
     }
   }
 

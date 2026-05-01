@@ -1,43 +1,45 @@
-from flask import Flask, request, jsonify,make_response
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
+from functools import wraps
 import sqlite3
 import os
 import jwt
 import datetime
-from functools import wraps
 
 app = Flask(__name__)
 
-#allows authentication on requests
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+# allows authentication on requests
+CORS(
+    app,
+    resources={r"/*": {"origins": "http://localhost:5173"}},
+    supports_credentials=True,
+)
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(base_dir, "database", "sensorsDashBoard.db")
 
-
-app.config['SECRET_KEY'] = 'your_super_secret_safe_key'
-
+app.config["SECRET_KEY"] = "your_super_secret_safe_key"  # change later
 
 
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         token = None
-      
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-        
+
+        if "Authorization" in request.headers:
+            auth_header = request.headers["Authorization"]
+
             token = auth_header.split(" ")[1] if " " in auth_header else auth_header
 
         if not token:
             return make_response(jsonify({"message": "A valid token is missing!"}), 401)
 
         try:
-    
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-           
-            current_user_username = data['username']
-            current_user_role = data['role']
+
+            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+
+            current_user_username = data["username"]
+            current_user_role = data["role"]
         except jwt.ExpiredSignatureError:
             return make_response(jsonify({"message": "Token has expired!"}), 401)
         except jwt.InvalidTokenError:
@@ -45,27 +47,30 @@ def token_required(f):
         except Exception as e:
             return make_response(jsonify({"message": str(e)}), 401)
 
-
         return f(current_user_username, current_user_role, *args, **kwargs)
 
     return decorator
 
 
+# AUTH
 
 @app.route("/loginValidation", methods=["POST"])
-def logInvalidate():
+def loginManager():
+
     sqlConn = None
     try:
-
         sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor() 
+        cursor = sqlConn.cursor()
 
-        data = request.get_json()  
+        data = request.get_json()
         username = data.get("username")
         password = data.get("password")
 
         if not username or not password:
-            return jsonify({"messagetype": "Error", "message": "Missing Input"}), 404
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Missing Input"
+                }), 400
 
         query = """
                 SELECT u.password, r.role 
@@ -79,53 +84,56 @@ def logInvalidate():
         result = cursor.fetchone()
 
         if result is None:
-            return (
-                jsonify(
-                    {
-                        "messagetype": "Error",
-                        "message": "No accounts with that name exist yet"
-                    }
-                ),404
-            )
-        
+            return jsonify({
+                "messagetype": "Error",
+                "message": "No accounts with that name exist"
+                }),404
+
+
         if result[0] != password:
-            return jsonify({"messagetype": "Error", "message": "Wrong password. Try again"}),404
-            
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Wrong password. Try again"
+                }),401
+        
         role = result[1]
 
-
         payload = {
-        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24),
-        'username': username,        
-        "role": role
+            "exp": datetime.datetime.now(datetime.timezone.utc)
+            + datetime.timedelta(hours=1),
+            "username": username,
+            "role": role
         }
 
-
-        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
-
+        token = jwt.encode(payload, app.config["SECRET_KEY"], algorithm="HS256")
 
         return jsonify({
-            "messagetype": "Valid", 
+            "messagetype": "Valid",
             "message": "Logging in",
             "role": role,
-            "token" : token
+            "token": token
             }),200
-
-
+        
 
     except sqlite3.Error as error:
-        return jsonify({"messagetype": "Error", "message": str(error)}), 404
-
+        return jsonify({
+            "messagetype": "Error",
+            "message": error
+            }),500
+            
     finally:
-
         if sqlConn:
             sqlConn.close()
 
 
 @app.route("/signUp", methods=["POST"])
-def signUpmanager():
+def signupManager():
+    
     sqlConn = None
     try:
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()  
+
         data = request.get_json()
         username = data.get("username")
         password = data.get("password")
@@ -133,77 +141,67 @@ def signUpmanager():
         fullName = data.get("fullName")
 
         if not username or not password or not email or not fullName:
-            return jsonify({"messagetype": "Error", "message": "Missing Input"}), 404
-
-        sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()  # executes sql commands
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Missing Input"
+                }), 400
 
         query = "SELECT username FROM users WHERE username = ?"
 
         cursor.execute(query, (username,))
 
-        result = (
-            cursor.fetchone()
-        )  
+        result = cursor.fetchone()
 
+        # username already exists, try another one
         if result is not None:
-            # username already exists, try another one
-            return (
-                jsonify(
-                    {
-                        "messagetype": "Error",
-                        "message": "Account with that name already exists",
-                    }
-                ),
-                404,
-            )
-        else:
-            cursor.execute("SELECT COUNT(*) FROM users")
-            user_counter = cursor.fetchone()
-            counter = user_counter[0]
+            return jsonify({
+                "messagetype": "Error",
+                "message": "Account with that name already exists"
+                }),409
+            
+        cursor.execute("SELECT COUNT(*) FROM users")
+        user_counter = cursor.fetchone()
+        counter = user_counter[0]
 
-            if counter == 0:
-                role = "admin"
-            else:
-                role = "user"
+        if counter == 0: role = "admin"
+        else: role = "user"
+            
+        tempquery = "SELECT id FROM roles WHERE role = ?"
+        cursor.execute(tempquery, (role,))
+        res = cursor.fetchone()
+        roleID = res[0]
 
-            tempquery = "SELECT id FROM roles WHERE role = ?"
-            cursor.execute(tempquery, (role,))
-            res = cursor.fetchone()
-            roleID = res[0]
+        query = """
+                INSERT INTO users (username, password, email, fullName, role_id)
+                VALUES (?, ?, ?, ?, ?)
+                """
 
-            query = """
-            INSERT INTO users (username, password, email, fullName, role_id)
-            VALUES (?, ?, ?, ?, ?)"""
+        cursor.execute(query, (username, password, email, fullName, roleID))
+        sqlConn.commit()
+        cursor.close()
 
-            cursor.execute(query, (username, password, email, fullName, roleID))
-
-            sqlConn.commit()
-
-            cursor.close()
-
-            return (
-                jsonify(
-                    {"messagetype": "Valid", "message": "Account created successfully"}
-                ),
-                200,
-            )
-
+        return jsonify({
+            "messagetype": "Valid", 
+            "message": "Account created successfully"
+            }),201
+        
     except sqlite3.Error as error:
-        return jsonify({"messagetype": "Error", "message": str(error)}), 404
-
+        return jsonify({
+            "messagetype": "Error",
+            "message": error
+            }),500
+            
     finally:
-
         if sqlConn:
             sqlConn.close()
 
 
-# SENSORS
 
+# SENSORS
 
 @app.route("/getSensorCategories", methods=["GET"])
 @token_required
-def sensorCategoriesManager(username,role):
+def sensorCategoriesManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
@@ -226,21 +224,22 @@ def sensorCategoriesManager(username,role):
         return jsonify(categories)
 
     except sqlite3.Error as error:
-        return jsonify({"message": str(error)}), 404
-
+        return jsonify({
+            "messagetype": "Error",
+            "message": error
+            }),500
+            
     finally:
-
         if sqlConn:
             sqlConn.close()
 
 
 @app.route("/addsensor", methods=["POST"])
 @token_required
-def addSensorManager(username,role):
+def addSensorManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-
 
     sqlConn = None
 
@@ -252,71 +251,59 @@ def addSensorManager(username,role):
         sensorName = data.get("name")
         metadata = data.get("metadata")
         category = data.get("category")
-        print(category, sensorName, metadata)
 
-        tempquery = """SELECT id FROM sensor_categories WHERE category = ? """
+        tempquery = "SELECT id FROM sensor_categories WHERE category = ?"
 
         cursor.execute(tempquery, (category,))
         result = cursor.fetchone()
-
         categoryID = result[0]
 
-        query = """INSERT INTO sensors (name, metadata, category_id) VALUES (?, ?, ?)"""
+        query = "INSERT INTO sensors (name, metadata, category_id) VALUES (?, ?, ?)"
 
         cursor.execute(query, (sensorName, metadata, categoryID))
-
         sqlConn.commit()
-
         cursor.close()
 
-        return (
-            jsonify({"messagetype": "Valid", "message": "Sensor Added successfully"}),
-            200,
-        )
+        return jsonify({
+            "messagetype": "Valid", 
+            "message": "Sensor created successfully"
+            }),201
 
     except sqlite3.Error as error:
-        return jsonify({"message": str(error)}), 404
-
+        return jsonify({
+            "messagetype": "Error",
+            "message": error
+            }),500
+            
     finally:
-
         if sqlConn:
             sqlConn.close()
 
-
-# gets data from specific sensor
 @app.route("/getChosenSensorData", methods=["GET"])
 @token_required
-def chosenSensorDataManager(username,role):
-
+def chosenSensorManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
 
-
     sqlConn = None
     try:
+        sqlConn = sqlite3.connect(db_path)
+        cursor = sqlConn.cursor()  
+
         sensor_id = request.args.get("id")
 
-        sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()  # executes sql commands
-
-        query = """ SELECT s.name, s.metadata, c.category FROM sensors s JOIN sensor_categories c ON s.category_id = c.id WHERE s.id = ?"""
+        query = "SELECT s.name, s.metadata, c.category FROM sensors s JOIN sensor_categories c ON s.category_id = c.id WHERE s.id = ?"
 
         cursor.execute(query, (sensor_id,))
-
         result = cursor.fetchone()
 
         if result is None:
-
-            return (
-                jsonify(
-                    {
-                        "messagetype": "Error",
-                        "message": f"Sensor with ID: {sensor_id} couldnt be found",
-                    }
-                ),
-                404,
-            )
+            return jsonify({
+                "messagetype": "Error",
+                "message": f"Sensor with ID: {sensor_id} couldnt be found",
+                }),404
+            
 
         sensorName = result[0]
         sensorMetadata = result[1]
@@ -327,21 +314,23 @@ def chosenSensorDataManager(username,role):
             "category": sensorCategory,
             "metadata": sensorMetadata,
         }
-
+        
         return jsonify(sensorData)
 
     except sqlite3.Error as error:
-        return jsonify({"message": str(error)}), 404
-
+        return jsonify({
+            "messagetype": "Error",
+            "message": error
+            }),500
+            
     finally:
-
         if sqlConn:
             sqlConn.close()
 
 
 @app.route("/editSensor", methods=["POST"])
 @token_required
-def editSensorManager(username,role):
+def editSensorManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
@@ -387,17 +376,16 @@ def editSensorManager(username,role):
 # returns all sensors and some of their info for the control panel
 @app.route("/getSensorsData", methods=["GET"])
 @token_required
-def getsensorData(username,role):
+def getsensorData(username, role):
 
     sqlConn = None
 
     try:
 
         sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor()  
+        cursor = sqlConn.cursor()
 
-
-        #sensor data for the control panel sensor table
+        # sensor data for the control panel sensor table
         query = """ SELECT s.id,s.name, c.category FROM sensors s JOIN sensor_categories c ON s.category_id == c.id"""
 
         cursor.execute(query)
@@ -413,7 +401,7 @@ def getsensorData(username,role):
             sensorNames.append(row[1])
             sensorCategories.append(row[2])
 
-        #sensor info for the control panel graphs etc
+        # sensor info for the control panel graphs etc
 
         query = "SELECT COUNT(*) FROM sensors"
         cursor.execute(query)
@@ -424,7 +412,7 @@ def getsensorData(username,role):
         cursor.execute(query)
         result = cursor.fetchone()
         sumOfMeasurements = result[0]
-        
+
         query = """
             SELECT c.category, AVG(m.value) 
             FROM sensor_categories c
@@ -433,28 +421,26 @@ def getsensorData(username,role):
             GROUP BY c.category
         """
         cursor.execute(query)
-        result = cursor.fetchall() 
-        
+        result = cursor.fetchall()
+
         avg_values = {}
         for row in result:
-            avg_values[row[0]] = round(row[1], 2) #row[0] sensor name, row[1] values mean
-
+            avg_values[row[0]] = round(
+                row[1], 2
+            )  # row[0] sensor name, row[1] values mean
 
         sensorData = {
             "sensorTable": {
                 "id": sensorIDs,
                 "names": sensorNames,
-                "categories": sensorCategories
+                "categories": sensorCategories,
             },
-
-            "sensorInfoStats" : {
-                "sumOfSensors" : sumOfSensors,
+            "sensorInfoStats": {
+                "sumOfSensors": sumOfSensors,
                 "sumOfMeasurements": sumOfMeasurements,
-                "avgTemp" : avg_values.get("Temperature", 0),
-                "avgHumid" : avg_values.get("Humidity", 0)
-
-            }
-
+                "avgTemp": avg_values.get("Temperature", 0),
+                "avgHumid": avg_values.get("Humidity", 0),
+            },
         }
 
         return jsonify(sensorData)
@@ -468,10 +454,10 @@ def getsensorData(username,role):
             sqlConn.close()
 
 
-#measurement for a specific sensor (used for the more info graph)
+# measurement for a specific sensor (used for the more info graph)
 @app.route("/getMeasurements", methods=["GET"])
 @token_required
-def getMeasurementsManager(username,role):
+def getMeasurementsManager(username, role):
 
     sqlConn = None
 
@@ -507,14 +493,13 @@ def getMeasurementsManager(username,role):
             sqlConn.close()
 
 
-
 @app.route("/sensorNewDataStore", methods=["POST"])
 @token_required
-def sensorNewDataManager(username,role):
+def sensorNewDataManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
+
     sqlConn = None
 
     try:
@@ -523,28 +508,25 @@ def sensorNewDataManager(username,role):
         currentSensorID = data.get("sensorID")
         currentSensorValue = data.get("sensorValue")
         currentTimestamp = data.get("timestamp")
-        
 
         sqlConn = sqlite3.connect(db_path)
         cursor = sqlConn.cursor()
 
-        query = 'INSERT INTO measurements (value, timestamp, sensor_id) VALUES(?,?,?)'
-    
-        cursor.execute(query,(currentSensorValue,currentTimestamp,currentSensorID))
-    
-        sqlConn.commit() 
+        query = "INSERT INTO measurements (value, timestamp, sensor_id) VALUES(?,?,?)"
 
-        return jsonify({"message" : "Valid"}), 202
-    
+        cursor.execute(query, (currentSensorValue, currentTimestamp, currentSensorID))
+
+        sqlConn.commit()
+
+        return jsonify({"message": "Valid"}), 202
+
     except sqlite3.Error as error:
-            return jsonify({"messagetype": "Error", "message": str(error)}), 404
+        return jsonify({"messagetype": "Error", "message": str(error)}), 404
 
     finally:
 
-            if sqlConn:
-                sqlConn.close()
-
-
+        if sqlConn:
+            sqlConn.close()
 
 
 # USERS
@@ -552,11 +534,11 @@ def sensorNewDataManager(username,role):
 
 @app.route("/getUserRoles", methods=["GET"])
 @token_required
-def getRoles(username,role):
+def getRoles(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
+
     sqlConn = None
     try:
 
@@ -591,7 +573,7 @@ def getRoles(username,role):
 
 @app.route("/adduser", methods=["POST"])
 @token_required
-def addUserManager(username,role):
+def addUserManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
@@ -663,14 +645,14 @@ def addUserManager(username,role):
             sqlConn.close()
 
 
-#get all users data for the users table
+# get all users data for the users table
 @app.route("/getUserData", methods=["GET"])
 @token_required
-def getuserdata(username,role):
+def getuserdata(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
+
     sqlConn = None
     try:
 
@@ -725,17 +707,17 @@ def getuserdata(username,role):
 
 @app.route("/getChosenUserData", methods=["GET"])
 @token_required
-def chosenUserManager(username,role):
+def chosenUserManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
+
     sqlConn = None
     try:
         user_id = request.args.get("id")
 
         sqlConn = sqlite3.connect(db_path)
-        cursor = sqlConn.cursor() 
+        cursor = sqlConn.cursor()
 
         query = " SELECT u.username,u.password,u.email,u.fullName, r.role FROM users u JOIN roles r ON u.role_id  = r.id WHERE u.id = ?"
 
@@ -749,7 +731,7 @@ def chosenUserManager(username,role):
                 jsonify(
                     {
                         "messagetype": "Error",
-                        "message": f"User with ID: {user_id} couldnt be found"
+                        "message": f"User with ID: {user_id} couldnt be found",
                     }
                 ),
                 404,
@@ -760,12 +742,11 @@ def chosenUserManager(username,role):
         userEmail = result[2]
         userFullName = result[3]
 
-
         userData = {
             "username": userName,
             "password": userPass,
             "email": userEmail,
-            "fullName" : userFullName
+            "fullName": userFullName,
         }
 
         return jsonify(userData)
@@ -778,20 +759,14 @@ def chosenUserManager(username,role):
         if sqlConn:
             sqlConn.close()
 
-    
-
-
-
-
-
 
 @app.route("/edituser", methods=["POST"])
 @token_required
-def editUserManager(username,role):
+def editUserManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
+
     sqlConn = None
     try:
         data = request.get_json()
@@ -839,14 +814,12 @@ def editUserManager(username,role):
             sqlConn.close()
 
 
-
 @app.route("/deleteuser", methods=["POST"])
 @token_required
-def deleteUserManager(username,role):
+def deleteUserManager(username, role):
 
     if role != "admin":
         return jsonify({"message": "Permission denied"}), 403
-    
 
     sqlConn = None
     try:

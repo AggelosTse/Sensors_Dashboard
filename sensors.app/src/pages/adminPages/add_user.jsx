@@ -19,25 +19,20 @@ export function AddUser() {
 
   const [sending, setSending] = useState(false); //to prevent spamming button
 
+  const { token } = useAuth();
+  
   async function addSubmit() {
-
-    const { token } = useAuth();
 
     if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
     if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim() || !role.trim()) {
-      setTimeout(() => {
-        setMessage("Missing Input");
-        setMessageType("Error");
-      }, 700);
-
-      setTimeout(() => {
-        setSending(false);
-      }, 2200);
+      setMessage("Missing Input");
+      setMessageType("Error");
       return;
     }
+
 
     try {
       const response = await fetch("http://localhost:8001/adduser", {
@@ -63,29 +58,21 @@ export function AddUser() {
         setMessageType(data.messagetype);
 
         setTimeout(() => {
-          //navigating to dashboard page after 4 seconds
+
           setSending(false);
           navig("/control_panel");
-        }, 4000);
-      } else {
-        setTimeout(() => {
-          setMessage(data.message);
-          setMessageType(data.messagetype);
-        }, 700);
-
-        setTimeout(() => {
-          setSending(false);
         }, 2200);
+      }
+      else {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
+        setSending(false);
       }
 
     } catch (error) {
-      setMessage("Network error. Is the server running?");
+      setMessage(error);
       setMessageType("Error");
-    } finally {
-      
-      setSending(false);
-
-    }
+    } 
   }
 
 
@@ -113,30 +100,14 @@ export function AddUser() {
 }
 
 
-function AddUserField({
-  username,
-  password,
-  email,
-  fullName,
-  setUsername,
-  setPassword,
-  setEmail,
-  setFullName,
-  setRole,
-  addSubmit,
-  sending,
-}) {
+function AddUserField({username,password,email,fullName,setUsername,setPassword,setEmail,setFullName,setRole,addSubmit,sending,}) {
 
   const [roleslist, setRolesList] = useState([]);
-
   const { token } = useAuth();
 
   useEffect(() => {
     fetchRoles();
-
   }, []);
-
-
 
   async function fetchRoles() {
     const response = await fetch("http://localhost:8001/getUserRoles", {
