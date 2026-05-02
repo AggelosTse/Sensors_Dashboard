@@ -77,7 +77,7 @@ export function ControlPanel() {
 
       <SensorsTable sensorList={sensorList} errorOccured={errorOccured} serverMessage={serverMessage} />
 
-      {role === "admin" && <UsersList />}
+      {role === "admin" && <UsersTable />}
     </div>
   );
 }
@@ -199,7 +199,7 @@ function SensorsTable({ sensorList, errorOccured, serverMessage }) {
 }
 
 
-function UsersList() {
+function UsersTable() {
   const [userlist, setUserlist] = useState([]);
   const [errorOccured, setErrorOccured] = useState(false);
   const [serverMessage, setMessage] = useState("");

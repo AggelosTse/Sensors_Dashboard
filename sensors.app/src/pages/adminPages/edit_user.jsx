@@ -4,17 +4,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../authContext";
 
 export function EditUser() {
-
   const location = useLocation();
   const userdata = location.state;
 
-  const [userID, setUserID] = useState("");
-
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    email: "",
+    fullName: "",
+    role: ""
+  });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
@@ -27,9 +26,8 @@ export function EditUser() {
 
   useEffect(() => {
     if (userdata) {
-      setUserID(userdata.id || "");
+      getChosenUserData(userdata.id);
     }
-    getChosenUserData(userdata.id);
   }, [userdata]);
 
   async function getChosenUserData(id) {
@@ -38,7 +36,7 @@ export function EditUser() {
       {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
@@ -46,38 +44,49 @@ export function EditUser() {
 
     const data = await response.json();
     if (response.ok) {
-      setUsername(data.username);
-      setPassword(data.password);
-      setEmail(data.email);
-      setFullName(data.fullName);
-      
+      setFormData({
+        username: data.username || "",
+        password: data.password || "",
+        email: data.email || "",
+        fullName: data.fullName || "",
+        role: data.role || "",
+      });
     }
   }
+
+  //function to update the formData object
+  const handleFormChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
 
   async function submitButton() {
     if (sending) return; //if true, button is already doing a task
 
-    setSending(true);
-
-    if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim()) {
+    if (
+      !formData.username.trim() ||
+      !formData.password.trim() ||
+      !formData.email.trim() ||
+      !formData.fullName.trim()
+    ) {
       setMessage("Missing Input");
       setMessageType("Error");
       return;
     }
+    setSending(true);
 
     const response = await fetch("http://localhost:8001/edituser", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         id: userdata.id,
-        username: username,
-        password: password,
-        email: email,
-        fullName: fullName,
-        role: role,
+        username: formData.username,
+        password: formData.password,
+        email: formData.email,
+        fullName: formData.fullName,
+        role: formData.role,
       }),
     });
 
@@ -94,24 +103,18 @@ export function EditUser() {
     } else {
       setMessage(data.message);
       setMessageType(data.messagetype);
+      setSending(false);
     }
-
   }
 
   return (
     <div>
-      <ChosenUserData
-        username={username}
-        setUsername={setUsername}
-        password={password}
-        setPassword={setPassword}
-        email={email}
-        setEmail={setEmail}
-        fullName={fullName}
-        setFullName={setFullName}
-      />
+      <ChosenUserData formData={formData} onChange={handleFormChange} />
 
-      <AvailableRoles role={role} setRole={setRole} />
+      <AvailableRoles
+        currentRole={formData.role}
+        setNewRole={(val) => handleFormChange("role", val)}
+      />
 
       <button onClick={submitButton}>Update</button>
 
@@ -120,58 +123,44 @@ export function EditUser() {
   );
 }
 
-
-function ChosenUserData({ username, setUsername, password, setPassword, email, setEmail, fullName, setFullName, }) {
+function ChosenUserData({ formData, onChange }) {
+  const fields = [
+    { label: "username", type: "text" },
+    { label: "password", type: "password" },
+    { label: "email", type: "text" },
+    { label: "fullName", type: "text" },
+  ];
 
   return (
     <div>
-      <input
-        type="text"
-        placeholder={username}
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />{" "}
-      <br />
-      <input
-        type="password"
-        placeholder={password}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br />
-      <input
-        type="text"
-        placeholder={email}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br />
-      <input
-        type="text"
-        placeholder={fullName}
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-      />
+      {fields.map((field) => (
+        <div key={field.label}>
+          <input
+            type={field.type}
+            placeholder={field.label}
+            value={formData[field.label]}
+            onChange={(e) => onChange(field.label, e.target.value)}
+          />
+          <br />
+        </div>
+      ))}
     </div>
   );
 }
 
-function AvailableRoles({ role, setRole }) {
-
-  const [userRole, setUserRole] = useState([]);
-
+function AvailableRoles({ currentRole, setNewRole }) {
+  const [availableRoles, setAvailableRoles] = useState([]);
   const { token } = useAuth();
-
+ 
   useEffect(() => {
     fetchAvailableRoles();
-
   }, []);
 
   async function fetchAvailableRoles() {
     const response = await fetch("http://localhost:8001/getUserRoles", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -179,20 +168,15 @@ function AvailableRoles({ role, setRole }) {
 
     const data = await response.json();
     if (response.ok) {
-      setUserRole(data)
+      setAvailableRoles(data);
     }
   }
 
   return (
-    <div>
-      <label htmlFor="options">user role</label> <br />
-      <select
-        name="editusers"
-        id="edidusers"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-      >
-        {userRole.map((role, index) => (
+    <div style={{ margin: "15px 0" }}>
+      <label>User Role: </label>
+      <select value={currentRole} onChange={(e) => setNewRole(e.target.value)}>
+        {availableRoles.map((role, index) => (
           <option key={index} value={role}>
             {role}
           </option>

@@ -731,12 +731,14 @@ def chosenUserManager(username, role):
         userPass = result[1]
         userEmail = result[2]
         userFullName = result[3]
-
+        userRole = result[4]
+        
         userData = {
             "username": userName,
             "password": userPass,
             "email": userEmail,
-            "fullName": userFullName
+            "fullName": userFullName,
+            "role" : userRole
         }
 
         return jsonify(userData),200
