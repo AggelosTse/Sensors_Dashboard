@@ -92,7 +92,6 @@ export function EditSensor() {
 
   return (
     <div>
-      <Logo />
       <ChosenSensorData
         sensorID={sensorID}
         setSensorID={setSensorID}
@@ -112,10 +111,6 @@ export function EditSensor() {
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
-}
-
-function Logo() {
-  return <h1> EDIT SENSOR</h1>;
 }
 
 function ChosenSensorData({ sensorName, setSensorName, sensorMetadata, setSensorMetadata, }) {
