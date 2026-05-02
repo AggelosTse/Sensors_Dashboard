@@ -22,10 +22,11 @@ export function LoginPage() {
     setSending(true);
 
     if (!username.trim() || !password.trim()) {
-        setMessage("Missing Input");
-        setMessageType("Error");
-        return;
-      }
+      setMessage("Missing Input");
+      setMessageType("Error");
+      setSending(false);
+      return;
+    }
 
     const response = await fetch("http://localhost:8001/loginValidation", {
       method: "POST",
@@ -70,7 +71,11 @@ export function LoginPage() {
       />
 
       <TextForSignup issending={sending} />
-      <LoginButton onClick={handleLogin} issending={sending} />
+
+      <button onClick={handleLogin} disabled={sending}>
+        {sending ? "Processing..." : "Log In"}
+      </button>
+
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
@@ -79,6 +84,7 @@ export function LoginPage() {
 function Logo() {
   return <h1>LOG IN</h1>;
 }
+
 function Fields({ username, password, setUsername, setPassword }) {
   return (
     <div>
@@ -114,18 +120,10 @@ function TextForSignup({ issending }) {
   );
 }
 
-function LoginButton({ onClick, issending }) {
-  return (
-    <button onClick={onClick} disabled={issending}>
-      {issending ? "Processing..." : "Log In"}
-    </button>
-  );
-}
-
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;

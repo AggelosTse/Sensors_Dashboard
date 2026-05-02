@@ -6,10 +6,13 @@ export function EditSensor() {
   const location = useLocation();
   const userdata = location.state;
 
-  const [sensorID, setSensorID] = useState("");
-  const [sensorName, setSensorName] = useState("");
-  const [sensorCategory, setSensorCategory] = useState("");
-  const [sensorMetadata, setSensorMetadata] = useState("");
+  const [sensorID, setSensorID] = useState(userdata.id || "");  //parsing it from control panel
+
+  const [formData, setFormData] = useState({
+    name: "",
+    metadata: "",
+    category: ""
+  });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
@@ -21,120 +24,132 @@ export function EditSensor() {
   const { token } = useAuth();
 
   useEffect(() => {
-    if (userdata) {
-      setSensorID(userdata.id || "");
-    }
-    getChosenSensorData(userdata.id);
-  }, [userdata]);
+    getChosenSensorData(sensorID);
+  }, []);
 
   async function getChosenSensorData(id) {
-    const response = await fetch(
-      `http://localhost:8001/getChosenSensorData?id=${id}`,
-      {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    const data = await response.json();
-    if (response.ok) {
-      setSensorName(data.name);
-      setSensorCategory(data.category);
-      setSensorMetadata(data.metadata);
+    try {
+      const response = await fetch(
+        `http://localhost:8001/getChosenSensorData?id=${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        setFormData({
+          name: data.name || "",
+          metadata: data.metadata || "",
+          category: data.category || ""
+        });
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
+      setSending(false);
     }
   }
+
+
+  const handleFormChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
 
   async function submitChanges() {
     if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    if (!sensorName.trim() || !sensorCategory.trim() || !sensorMetadata.trim()) {
+    if (!formData.name.trim() || !formData.category.trim() || !formData.metadata.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
+      setSending(false);
       return;
     }
 
-    const response = await fetch("http://localhost:8001/editSensor", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: sensorID,
-        name: sensorName,
-        category: sensorCategory,
-        metadata: sensorMetadata,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:8001/editSensor", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: sensorID,
+          name: formData.name,
+          category: formData.category,
+          metadata: formData.metadata
+        }),
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      const data = await response.json();
+      if (response.ok) {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
 
-      setTimeout(() => {
+        setTimeout(() => {
 
+          setSending(false);
+          navig("/control_panel");
+        }, 2200);
+      }
+      else {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
         setSending(false);
-        navig("/control_panel");
-      }, 2200);
-    }
-    else {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
       setSending(false);
     }
   }
 
   return (
     <div>
-      <ChosenSensorData
-        sensorID={sensorID}
-        setSensorID={setSensorID}
-        sensorName={sensorName}
-        setSensorName={setSensorName}
-        sensorCategory={sensorCategory}
-        setSensorCategory={setSensorCategory}
-        sensorMetadata={sensorMetadata}
-        setSensorMetadata={setSensorMetadata}
-      />
-      <AvailableCategories
-        category={sensorCategory}
-        setCategory={setSensorCategory}
-      />
-      <button onClick={submitChanges}>Update sensor</button>
+      <ChosenSensorData formData={formData} handleFormChange={handleFormChange} />
+
+      <AvailableCategories currentCategory={formData.category} handleFormChange={handleFormChange} setMessage={setMessage} setMessageType={setMessageType} />
+
+      <button onClick={submitChanges}>
+        {sending ? "Sending..." : "EDIT SENSOR"}
+      </button>
 
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function ChosenSensorData({ sensorName, setSensorName, sensorMetadata, setSensorMetadata, }) {
+function ChosenSensorData({ formData, handleFormChange }) {
+
   return (
     <div>
       <input
         type="text"
-        placeholder={sensorName}
-        value={sensorName}
-        onChange={(e) => setSensorName(e.target.value)}
-      />{" "}
+        placeholder={formData.name}
+        value={formData.name}
+        onChange={(e) => handleFormChange("name", e.target.value)}
+      />
       <br />
       <input
         type="text"
-        placeholder={sensorMetadata}
-        value={sensorMetadata}
-        onChange={(e) => setSensorMetadata(e.target.value)}
+        placeholder={formData.metadata}
+        value={formData.metadata}
+        onChange={(e) => handleFormChange("metadata", e.target.value)}
       />
     </div>
   );
 }
 
 
-function AvailableCategories({ category, setCategory }) {
+function AvailableCategories({ currentCategory, handleFormChange, setMessage, setMessageType }) {
 
   const [categories, setCategories] = useState([]);
 
@@ -145,18 +160,25 @@ function AvailableCategories({ category, setCategory }) {
   }, []);
 
   async function fetchSensorCategories() {
-    const response = await fetch("http://localhost:8001/getSensorCategories", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
 
-    const data = await response.json();
-    if (response.ok) {
-      setCategories(data);
+    try {
+      const response = await fetch("http://localhost:8001/getSensorCategories", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCategories(data);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
+      setSending(false);
     }
   }
 
@@ -166,12 +188,12 @@ function AvailableCategories({ category, setCategory }) {
       <select
         name="categories"
         id="categories"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
+        value={currentCategory}
+        onChange={(e) => handleFormChange("category", e.target.value)}
       >
-        {categories.map((categories, index) => (
-          <option key={index} value={categories}>
-            {categories}
+        {category.map((category, index) => (
+          <option key={index} value={category}>
+            {category}
           </option>
         ))}
       </select>
@@ -182,7 +204,7 @@ function AvailableCategories({ category, setCategory }) {
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;

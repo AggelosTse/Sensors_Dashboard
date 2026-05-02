@@ -1,23 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { useAuth } from "../authContext";
 
 export function AddSensors() {
+
   const [formData, setFormData] = useState({
     name: "",
     metadata: "",
-    category: "Humidity",
+    category: ""
   });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
-
   const [sending, setSending] = useState(false); //to prevent spamming button
-
-  const navig = useNavigate();
-
   const { token } = useAuth();
+  const navig = useNavigate();
 
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -31,6 +28,7 @@ export function AddSensors() {
     if (!formData.name.trim() || !formData.metadata.trim()) {
       setMessage("Missing Input");
       setMessageType("Failure");
+      setSending(false);
       return;
     }
 
@@ -43,9 +41,9 @@ export function AddSensors() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: name,
-          metadata: metadata,
-          category: category,
+          name: formData.name,
+          metadata: formData.metadata,
+          category: formData.category
         }),
       });
 
@@ -64,28 +62,69 @@ export function AddSensors() {
         setSending(false);
       }
     } catch (error) {
-      setMessage(error);
+      setMessage(error.message);
       setMessageType("Error");
+      setSending(false);
     }
   }
 
   return (
     <div>
-      <Fields
+      <AddSensorFields
         formData={formData}
         handleFormChange={handleFormChange}
-        handleAddSensor={handleAddSensor}
+        setMessage={setMessage}
+        setMessageType={setMessageType}
         sending={sending}
       />
+
+      <button onClick={handleAddSensor}>
+        {sending ? "Sending..." : "ADD SENSOR"}
+      </button>
+
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function Fields({ formData, handleFormChange, handleAddSensor, sending }) {
+function AddSensorFields({ formData, handleFormChange, setMessage, setMessageType, sending }) {
+
+  const [categoryList, setCategoryList] = useState([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  async function fetchCategories() {
+
+    try {
+      const response = await fetch("http://localhost:8001/getSensorCategories", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCategoryList(data);
+
+        if (data.length > 0 && !formData.category) {
+          handleFormChange("category", data[0]);
+        }
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
+    }
+  }
+
   const fields = [
-    { name: "name", type: "text", placeholder: "Name" },
-    { name: "metadata", type: "text", placeholder: "Metadata" },
+    { name: "name", placeholder: "name", type: "text" },
+    { name: "metadata", placeholder: "metadata", type: "text" }
   ];
 
   return (
@@ -105,29 +144,26 @@ function Fields({ formData, handleFormChange, handleAddSensor, sending }) {
       <label htmlFor="sensortype">Categories</label>
       <br />
       <select
-        id="CATEGORY"
+        id="category"
         value={formData.category}
         onChange={(e) => handleFormChange("category", e.target.value)}
       >
-        {rolesList.map((role) => (
-          <option key={role} value={role}>
-            {role}
+        {categoryList.map((category) => (
+          <option key={category} value={category}>
+            {category}
           </option>
         ))}
       </select>
       <br />
-
-      <button onClick={handleAddSensor} disabled={sending}>
-        {sending ? "Sending..." : "ADD SENSOR"}
-      </button>
     </div>
   );
 }
 
+
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;

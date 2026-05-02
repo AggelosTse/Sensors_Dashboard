@@ -10,7 +10,7 @@ export function AddUser() {
     password: "",
     email: "",
     fullName: "",
-    role: "",
+    role: ""
   });
 
   const [serverMessage, setMessage] = useState("");
@@ -29,15 +29,10 @@ export function AddUser() {
 
     setSending(true);
 
-    if (
-      !formData.username.trim() ||
-      !formData.password.trim() ||
-      !formData.email.trim() ||
-      !formData.fullName.trim() ||
-      !formData.role.trim()
-    ) {
+    if (!formData.username.trim() || !formData.password.trim() || !formData.email.trim() || !formData.fullName.trim() || !formData.role.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
+      setSending(false);
       return;
     }
 
@@ -74,26 +69,30 @@ export function AddUser() {
         setSending(false);
       }
     } catch (error) {
-      setMessage(error);
+      setMessage(error.message);
       setMessageType("Error");
+      setSending(false);
     }
   }
 
   return (
     <div>
-      <AddUserField
+      <AddUserFields
         formData={formData}
         handleFormChange={handleFormChange}
-        addSubmit={addSubmit}
-        sending={sending}
+        setMessage={setMessage}
+        setMessageType={setMessageType}
       />
+      <button onClick={addSubmit}>
+        {sending ? "Sending..." : "ADD USER"}
+      </button>
 
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function AddUserField({ formData, handleFormChange, addSubmit, sending }) {
+function AddUserFields({ formData, handleFormChange, setMessage, setMessageType }) {
   const [rolesList, setRolesList] = useState([]);
   const { token } = useAuth();
 
@@ -102,19 +101,27 @@ function AddUserField({ formData, handleFormChange, addSubmit, sending }) {
   }, []);
 
   async function fetchRoles() {
-    const response = await fetch("http://localhost:8001/getUserRoles", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      const response = await fetch("http://localhost:8001/getUserRoles", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      setRolesList(data);
-      if (!formData.role) updateField("role", data[0]);
+      const data = await response.json();
+      if (response.ok) {
+        setRolesList(data);
+
+        if (data.length > 0 && !formData.role) {
+          handleFormChange("role", data[0]);
+        }
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
     }
   }
 
@@ -155,9 +162,7 @@ function AddUserField({ formData, handleFormChange, addSubmit, sending }) {
       </select>
       <br />
 
-      <button onClick={addSubmit} disabled={sending}>
-        {sending ? "Sending..." : "ADD USER"}
-      </button>
+
     </div>
   );
 }
@@ -165,7 +170,7 @@ function AddUserField({ formData, handleFormChange, addSubmit, sending }) {
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;

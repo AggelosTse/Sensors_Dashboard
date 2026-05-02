@@ -31,26 +31,32 @@ export function EditUser() {
   }, [userdata]);
 
   async function getChosenUserData(id) {
-    const response = await fetch(
-      `http://localhost:8001/getChosenUserData?id=${id}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    const data = await response.json();
-    if (response.ok) {
-      setFormData({
-        username: data.username || "",
-        password: data.password || "",
-        email: data.email || "",
-        fullName: data.fullName || "",
-        role: data.role || "",
-      });
+    try {
+      const response = await fetch(
+        `http://localhost:8001/getChosenUserData?id=${id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        setFormData({
+          username: data.username || "",
+          password: data.password || "",
+          email: data.email || "",
+          fullName: data.fullName || "",
+          role: data.role || "",
+        });
+      }
+    } catch (error) {
+      setMessage(error);
+      setMessageType("Error");
     }
   }
 
@@ -62,68 +68,74 @@ export function EditUser() {
   async function submitButton() {
     if (sending) return; //if true, button is already doing a task
 
-    if (
-      !formData.username.trim() ||
-      !formData.password.trim() ||
-      !formData.email.trim() ||
-      !formData.fullName.trim()
-    ) {
+    if (!formData.username.trim() || !formData.password.trim() || !formData.email.trim() || !formData.fullName.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
+      setSending(false);
       return;
     }
     setSending(true);
 
-    const response = await fetch("http://localhost:8001/edituser", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: userdata.id,
-        username: formData.username,
-        password: formData.password,
-        email: formData.email,
-        fullName: formData.fullName,
-        role: formData.role,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:8001/edituser", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: userdata.id,
+          username: formData.username,
+          password: formData.password,
+          email: formData.email,
+          fullName: formData.fullName,
+          role: formData.role
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      if (response.ok) {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
 
-      setTimeout(() => {
+        setTimeout(() => {
+          setSending(false);
+          navig("/control_panel");
+        }, 2200);
+      } else {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
         setSending(false);
-        navig("/control_panel");
-      }, 2200);
-    } else {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
       setSending(false);
     }
   }
 
   return (
     <div>
-      <ChosenUserData formData={formData} onChange={handleFormChange} />
+      <ChosenUserData formData={formData} handleFormChange={handleFormChange} />
 
       <AvailableRoles
         currentRole={formData.role}
-        setNewRole={(val) => handleFormChange("role", val)}
+        handleFormChange={handleFormChange}
+        setMessage={setMessage}
+        setMessageType={setMessageType}
       />
 
-      <button onClick={submitButton}>Update</button>
+      <button onClick={submitButton}>
+        {sending ? "Sending..." : "EDIT USER"}
+      </button>
 
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function ChosenUserData({ formData, onChange }) {
+function ChosenUserData({ formData, handleFormChange }) {
   const fields = [
     { label: "username", type: "text" },
     { label: "password", type: "password" },
@@ -139,7 +151,7 @@ function ChosenUserData({ formData, onChange }) {
             type={field.type}
             placeholder={field.label}
             value={formData[field.label]}
-            onChange={(e) => onChange(field.label, e.target.value)}
+            onChange={(e) => handleFormChange(field.label, e.target.value)}
           />
           <br />
         </div>
@@ -148,34 +160,40 @@ function ChosenUserData({ formData, onChange }) {
   );
 }
 
-function AvailableRoles({ currentRole, setNewRole }) {
+function AvailableRoles({ currentRole, handleFormChange, setMessage, setMessageType }) {
   const [availableRoles, setAvailableRoles] = useState([]);
   const { token } = useAuth();
- 
+
   useEffect(() => {
     fetchAvailableRoles();
   }, []);
 
   async function fetchAvailableRoles() {
-    const response = await fetch("http://localhost:8001/getUserRoles", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
 
-    const data = await response.json();
-    if (response.ok) {
-      setAvailableRoles(data);
+    try {
+      const response = await fetch("http://localhost:8001/getUserRoles", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setAvailableRoles(data);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
     }
   }
 
   return (
     <div style={{ margin: "15px 0" }}>
       <label>User Role: </label>
-      <select value={currentRole} onChange={(e) => setNewRole(e.target.value)}>
+      <select value={currentRole} onChange={(e) => handleFormChange("role", e.target.value)}>
         {availableRoles.map((role, index) => (
           <option key={index} value={role}>
             {role}
@@ -189,7 +207,7 @@ function AvailableRoles({ currentRole, setNewRole }) {
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;
