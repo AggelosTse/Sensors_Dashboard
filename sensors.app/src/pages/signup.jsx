@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./authContext";
 import "../index.css";
 
 export function SignUpPage() {
+
+  const { login } = useAuth();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -23,38 +27,49 @@ export function SignUpPage() {
     if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
+      setSending(false);
       return;
     }
 
-    const response = await fetch("http://localhost:8001/signUp", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-        email: email,
-        fullName: fullName,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:8001/signUp", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          email: email,
+          fullName: fullName,
+        }),
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      const data = await response.json();
+      if (response.ok) {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
 
-      login(data.token, data.role);
+        // if token exists after sign up, you automatically log in
+        if (data.token) {
+          login(data.token, data.role);
 
-      setTimeout(() => {
+        }
+
+        setTimeout(() => {
+          setSending(false);
+          navig("/control_panel");
+        }, 2200);
+      }
+      else {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
         setSending(false);
-        navig("/");
-      }, 2200);
-    }
-    else {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
       setSending(false);
     }
   }

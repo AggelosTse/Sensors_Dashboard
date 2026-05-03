@@ -229,7 +229,6 @@ function UsersTable() {
         username: uname,
         email: data.emails[index],
         role: data.roles[index],
-        password: data.passwords[index],
         fullname: data.fullnames[index],
       }));
       setUserlist(combined);

@@ -9,7 +9,6 @@ export function EditUser() {
 
   const [formData, setFormData] = useState({
     username: "",
-    password: "",
     email: "",
     fullName: "",
     role: ""
@@ -48,7 +47,6 @@ export function EditUser() {
       if (response.ok) {
         setFormData({
           username: data.username || "",
-          password: data.password || "",
           email: data.email || "",
           fullName: data.fullName || "",
           role: data.role || "",
@@ -68,7 +66,7 @@ export function EditUser() {
   async function submitButton() {
     if (sending) return; //if true, button is already doing a task
 
-    if (!formData.username.trim() || !formData.password.trim() || !formData.email.trim() || !formData.fullName.trim()) {
+    if (!formData.username.trim() || !formData.email.trim() || !formData.fullName.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
       setSending(false);
@@ -86,7 +84,6 @@ export function EditUser() {
         body: JSON.stringify({
           id: userdata.id,
           username: formData.username,
-          password: formData.password,
           email: formData.email,
           fullName: formData.fullName,
           role: formData.role
@@ -138,7 +135,6 @@ export function EditUser() {
 function ChosenUserData({ formData, handleFormChange }) {
   const fields = [
     { label: "username", type: "text" },
-    { label: "password", type: "password" },
     { label: "email", type: "text" },
     { label: "fullName", type: "text" },
   ];

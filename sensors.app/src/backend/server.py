@@ -5,6 +5,8 @@ import sqlite3
 import os
 import jwt
 import datetime
+import bcrypt
+import re
 
 app = Flask(__name__)
 
@@ -20,6 +22,8 @@ db_path = os.path.join(base_dir, "database", "sensorsDashBoard.db")
 
 app.config["SECRET_KEY"] = "your_super_secret_safe_key"  # change later
 
+#to check if the email is valid
+email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 
 def token_required(f):
     @wraps(f)
@@ -83,17 +87,10 @@ def loginManager():
 
         result = cursor.fetchone()
 
-        if result is None:
-            return jsonify({
-                "messagetype": "Error",
-                "message": "No accounts with that name exist"
-                }),404
-
-
-        if result[0] != password:
+        if result is None or not bcrypt.checkpw(password.encode('utf-8'), result[0].encode('utf-8')):
             return jsonify({
                 "messagetype": "Error", 
-                "message": "Wrong password. Try again"
+                "message": "Invalid username or Password"
                 }),401
         
         role = result[1]
@@ -118,7 +115,7 @@ def loginManager():
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -146,6 +143,18 @@ def signupManager():
                 "message": "Missing Input"
                 }), 400
 
+        if(len(password) < 8):
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Password not long enough (>8)"
+                }), 422
+
+        if not re.match(email_regex, email):
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Invalid Email Format"
+                }), 400
+
         query = "SELECT username FROM users WHERE username = ?"
 
         cursor.execute(query, (username,))
@@ -165,7 +174,10 @@ def signupManager():
 
         if counter == 0: role = "admin"
         else: role = "user"
-            
+        
+        #hashing the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
         tempquery = "SELECT id FROM roles WHERE role = ?"
         cursor.execute(tempquery, (role,))
         res = cursor.fetchone()
@@ -176,19 +188,31 @@ def signupManager():
                 VALUES (?, ?, ?, ?, ?)
                 """
 
-        cursor.execute(query, (username, password, email, fullName, roleID))
+        cursor.execute(query, (username, hashed_password, email, fullName, roleID))
         sqlConn.commit()
         cursor.close()
 
+        #creating a token in sign up so that you automatically log in after sign up
+        payload = {
+            "exp": datetime.datetime.now(datetime.timezone.utc)
+            + datetime.timedelta(hours=1),
+            "username": username,
+            "role": role
+        }
+
+        token = jwt.encode(payload, app.config["SECRET_KEY"], algorithm="HS256")
+
         return jsonify({
-            "messagetype": "Valid", 
-            "message": "Account created successfully"
+            "messagetype": "Valid",
+            "message": "Account Created Successfully",
+            "role": role,
+            "token": token
             }),201
         
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -225,7 +249,7 @@ def sensorCategoriesManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -271,7 +295,7 @@ def addSensorManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -319,7 +343,7 @@ def chosenSensorManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -366,7 +390,7 @@ def editSensorManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -443,7 +467,7 @@ def getAllSensorsData(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -482,7 +506,7 @@ def getMeasurementsManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -520,9 +544,9 @@ def storeNewDataManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
-            
+    
     finally:
         if sqlConn:
             sqlConn.close()
@@ -564,7 +588,7 @@ def getRoles(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -597,6 +621,18 @@ def addUserManager(username, role):
                 "message": "Missing Input"
                 }), 400
 
+        if(len(password) < 8):
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Password not long enough (>8)"
+                }), 422
+        
+        if not re.match(email_regex, email):
+            return jsonify({
+                "messagetype": "Error", 
+                "message": "Invalid Email Format"
+                }), 400
+        
         query = "SELECT username FROM users WHERE username = ?"
 
         cursor.execute(query, (username,))
@@ -616,12 +652,15 @@ def addUserManager(username, role):
         res = cursor.fetchone()
         roleID = res[0]
 
+        #hashing the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
         query = """
                 INSERT INTO users (username, password, role_id,email, fullName)   
                 VALUES (?, ?, ?, ?, ?)
                 """
 
-        cursor.execute(query, (username, password, roleID, email, fullName))
+        cursor.execute(query, (username, hashed_password, roleID, email, fullName))
         sqlConn.commit()
         cursor.close()
 
@@ -633,7 +672,7 @@ def addUserManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -655,7 +694,7 @@ def getuserdata(username, role):
         cursor = sqlConn.cursor()  # executes sql commands
 
         query = """
-                SELECT s.id,s.username,s.email,s.password,s.fullName, r.role
+                SELECT s.id,s.username,s.email,s.fullName, r.role
                 FROM users s
                 JOIN roles r 
                 ON s.role_id = r.id
@@ -668,7 +707,6 @@ def getuserdata(username, role):
         user_id = []
         usernames = []
         emails = []
-        passwords = []
         fullNames = []
         roles = []
 
@@ -676,14 +714,12 @@ def getuserdata(username, role):
             user_id.append(row[0])
             usernames.append(row[1])
             emails.append(row[2])
-            passwords.append(row[3])
-            fullNames.append(row[4])
-            roles.append(row[5])
+            fullNames.append(row[3])
+            roles.append(row[4])
 
         userdata = {
             "id": user_id,
             "usernames": usernames,
-            "passwords": passwords,
             "fullnames": fullNames,
             "emails": emails,
             "roles": roles,
@@ -694,7 +730,7 @@ def getuserdata(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -716,7 +752,7 @@ def chosenUserManager(username, role):
 
         user_id = request.args.get("id")
 
-        query = "SELECT u.username,u.password,u.email,u.fullName, r.role FROM users u JOIN roles r ON u.role_id  = r.id WHERE u.id = ?"
+        query = "SELECT u.username,u.email,u.fullName, r.role FROM users u JOIN roles r ON u.role_id  = r.id WHERE u.id = ?"
 
         cursor.execute(query, (user_id,))
         result = cursor.fetchone()
@@ -728,14 +764,12 @@ def chosenUserManager(username, role):
                 }),404
 
         userName = result[0]
-        userPass = result[1]
-        userEmail = result[2]
-        userFullName = result[3]
-        userRole = result[4]
+        userEmail = result[1]
+        userFullName = result[2]
+        userRole = result[3]
         
         userData = {
             "username": userName,
-            "password": userPass,
             "email": userEmail,
             "fullName": userFullName,
             "role" : userRole
@@ -746,7 +780,7 @@ def chosenUserManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -769,17 +803,23 @@ def editUserManager(username, role):
         data = request.get_json()
         userid = data.get("id")
         username = data.get("username")
-        password = data.get("password")
         email = data.get("email")
         fullName = data.get("fullName")
         role = data.get("role")
 
-        if not username or not password or not email or not fullName or not role:
+        if not username or not email or not fullName or not role:
             return jsonify({
                 "messagetype": "Error", 
                 "message": "Missing Input"
                 }), 400
 
+        if not re.match(email_regex, email):
+                    return jsonify({
+                        "messagetype": "Error", 
+                        "message": "Invalid Email Format"
+                        }), 400
+        
+        
         tempquery = "SELECT id FROM roles WHERE role = ?"
 
         cursor.execute(tempquery, (role,))
@@ -787,11 +827,11 @@ def editUserManager(username, role):
         roleID = res[0]
 
         query = """
-                UPDATE users SET username = ?, password = ?, email = ?, fullName = ?, role_id = ?
+                UPDATE users SET username = ?, email = ?, fullName = ?, role_id = ?
                 WHERE id = ?
                 """
         
-        cursor.execute(query, (username, password, email, fullName, roleID, userid))
+        cursor.execute(query, (username, email, fullName, roleID, userid))
         sqlConn.commit()
         cursor.close()
 
@@ -804,7 +844,7 @@ def editUserManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
@@ -841,7 +881,7 @@ def deleteUserManager(username, role):
     except sqlite3.Error as error:
         return jsonify({
             "messagetype": "Error",
-            "message": error
+            "message": "Internal Server Error"
             }),500
             
     finally:
