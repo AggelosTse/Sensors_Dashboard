@@ -28,35 +28,40 @@ export function LoginPage() {
       return;
     }
 
-    const response = await fetch("http://localhost:8001/loginValidation", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:8001/loginValidation", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
+      if (response.ok) {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
 
-      login(data.token, data.role);
+        login(data.token, data.role);
 
-      setTimeout(() => {
+        setTimeout(() => {
+          setSending(false);
+          navig("/control_panel");
+        }, 2200);
+      }
+      else {
+        setMessage(data.message);
+        setMessageType(data.messagetype);
         setSending(false);
-        navig("/control_panel");
-      }, 2200);
-    }
-    else {
-      setMessage(data.message);
-      setMessageType(data.messagetype);
-      setSending(false);
+      }
+    } catch (error) {
+      setMessage(error.message);
+      setMessageType("Error");
     }
   }
 
@@ -70,7 +75,7 @@ export function LoginPage() {
         setPassword={setPassword}
       />
 
-      <TextForSignup issending={sending} />
+      <TextForSignup sending={sending} />
 
       <button onClick={handleLogin} disabled={sending}>
         {sending ? "Processing..." : "Log In"}
@@ -105,12 +110,12 @@ function Fields({ username, password, setUsername, setPassword }) {
   );
 }
 
-function TextForSignup({ issending }) {
+function TextForSignup({ sending }) {
   return (
     <div>
       <p>
         Dont Have an account?
-        {issending ? (
+        {sending ? (
           <span style={{ color: "gray", cursor: "not-allowed" }}>Sign up</span>
         ) : (
           <Link to="/signup">Sign up</Link>

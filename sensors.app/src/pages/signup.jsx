@@ -134,7 +134,7 @@ function SignUpButton({ onClick, issending }) {
 function ServerMessage({ message, messagetype }) {
   if (!message) return null;
 
-  if (messagetype == "Error") {
+  if (messagetype === "Error") {
     return <p className="statusMessageError">{message}</p>;
   } else {
     return <p className="statusMessageValid">{message}</p>;
