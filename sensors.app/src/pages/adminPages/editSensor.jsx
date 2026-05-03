@@ -191,7 +191,7 @@ function AvailableCategories({ currentCategory, handleFormChange, setMessage, se
         value={currentCategory}
         onChange={(e) => handleFormChange("category", e.target.value)}
       >
-        {category.map((category, index) => (
+        {categories.map((category, index) => (
           <option key={index} value={category}>
             {category}
           </option>

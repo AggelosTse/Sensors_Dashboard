@@ -49,7 +49,7 @@ function Graph({ id }) {
   if (!sensorData) {
     return null;
   }
-
+  
   return (
     <SensorChart
       values={sensorData.values}
@@ -59,6 +59,7 @@ function Graph({ id }) {
 }
 
 function SensorChart({ values, timestamps }) {
+
   const chartData = useMemo(() => ({
     labels: timestamps,
     datasets: [{
