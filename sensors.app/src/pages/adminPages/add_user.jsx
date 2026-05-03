@@ -83,7 +83,7 @@ export function AddUser() {
         setMessage={setMessage}
         setMessageType={setMessageType}
       />
-      <button onClick={addSubmit}>
+      <button onClick={addSubmit} disabled={sending}>
         {sending ? "Sending..." : "ADD USER"}
       </button>
 
@@ -141,6 +141,7 @@ function AddUserFields({ formData, handleFormChange, setMessage, setMessageType 
             placeholder={field.placeholder}
             value={formData[field.name]}
             onChange={(e) => handleFormChange(field.name, e.target.value)}
+            required={field.type === "email" || ""}
           />
           <br />
         </div>

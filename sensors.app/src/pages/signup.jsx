@@ -7,10 +7,12 @@ export function SignUpPage() {
 
   const { login } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    email: "",
+    fullName: "",
+  });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
@@ -19,12 +21,16 @@ export function SignUpPage() {
 
   const navig = useNavigate();
 
+  const handleFormChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
   async function handleSignUp() {
     if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    if (!username.trim() || !password.trim() || !email.trim() || !fullName.trim()) {
+    if (!formData.username.trim() || !formData.password.trim() || !formData.email.trim() || !formData.fullName.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
       setSending(false);
@@ -39,10 +45,10 @@ export function SignUpPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username,
-          password: password,
-          email: email,
-          fullName: fullName,
+          username: formData.username,
+          password: formData.password,
+          email: formData.email,
+          fullName: formData.fullName,
         }),
       });
 
@@ -54,7 +60,6 @@ export function SignUpPage() {
         // if token exists after sign up, you automatically log in
         if (data.token) {
           login(data.token, data.role);
-
         }
 
         setTimeout(() => {
@@ -76,73 +81,43 @@ export function SignUpPage() {
 
   return (
     <div>
-      <Logo />
-      <Fields
-        username={username}
-        setUsername={setUsername}
-        password={password}
-        setPassword={setPassword}
-        email={email}
-        setEmail={setEmail}
-        fullName={fullName}
-        setFullName={setFullName}
-      />
-      <SignUpButton onClick={handleSignUp} issending={sending} />
+      <h1>SIGN UP</h1>
+      <Fields formData={formData} handleFormChange={handleFormChange} />
+
+      <button onClick={handleSignUp} disabled={sending}>
+        {issending ? "Processing..." : "Sign Up"}
+      </button>
+
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
     </div>
   );
 }
 
-function Logo() {
-  return <h1>SIGN UP</h1>;
-}
-function Fields({
-  username,
-  password,
-  setUsername,
-  setPassword,
-  email,
-  setEmail,
-  fullName,
-  setFullName
-}) {
+function Fields({ formData, handleFormChange }) {
+
+  const fields = [
+    { name: "username", type: "text", placeholder: "Username" },
+    { name: "password", type: "password", placeholder: "Password" },
+    { name: "email", type: "email", placeholder: "Email" },
+    { name: "fullName", type: "text", placeholder: "Full Name" },
+  ];
+
   return (
     <div>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />{" "}
-      <br />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br />
-      <input
-        type="text"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br />
-      <input
-        type="text"
-        placeholder="fullName"
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-      />
+      {fieldConfigs.map((f) => (
+        <div key={f.name}>
+          <input
+            name={f.name}
+            type={f.type}
+            placeholder={f.placeholder}
+            value={formData[f.name]}
+            onChange={(e) => handleFormChange(field.label, e.target.value)}
+            required={field.type === "email" || ""}
+          />
+          <br />
+        </div>
+      ))}
     </div>
-  );
-}
-function SignUpButton({ onClick, issending }) {
-  return (
-    <button onClick={onClick} disabled={issending}>
-      {issending ? "Processing..." : "Sign Up"}
-    </button>
   );
 }
 

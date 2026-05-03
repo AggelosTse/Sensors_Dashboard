@@ -78,7 +78,7 @@ export function AddSensors() {
         sending={sending}
       />
 
-      <button onClick={handleAddSensor}>
+      <button onClick={handleAddSensor} disabled={sending}>
         {sending ? "Sending..." : "ADD SENSOR"}
       </button>
 

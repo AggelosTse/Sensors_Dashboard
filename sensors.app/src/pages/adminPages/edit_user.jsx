@@ -123,7 +123,7 @@ export function EditUser() {
         setMessageType={setMessageType}
       />
 
-      <button onClick={submitButton}>
+      <button onClick={submitButton} disabled={sending}>
         {sending ? "Sending..." : "EDIT USER"}
       </button>
 
@@ -135,7 +135,7 @@ export function EditUser() {
 function ChosenUserData({ formData, handleFormChange }) {
   const fields = [
     { label: "username", type: "text" },
-    { label: "email", type: "text" },
+    { label: "email", type: "email" },
     { label: "fullName", type: "text" },
   ];
 
@@ -148,6 +148,7 @@ function ChosenUserData({ formData, handleFormChange }) {
             placeholder={field.label}
             value={formData[field.label]}
             onChange={(e) => handleFormChange(field.label, e.target.value)}
+            required={field.type === "email" || ""}
           />
           <br />
         </div>

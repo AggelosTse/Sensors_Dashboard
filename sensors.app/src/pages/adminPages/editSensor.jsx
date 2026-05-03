@@ -118,7 +118,7 @@ export function EditSensor() {
 
       <AvailableCategories currentCategory={formData.category} handleFormChange={handleFormChange} setMessage={setMessage} setMessageType={setMessageType} />
 
-      <button onClick={submitChanges}>
+      <button onClick={submitChanges} disabled = {sending}>
         {sending ? "Sending..." : "EDIT SENSOR"}
       </button>
 

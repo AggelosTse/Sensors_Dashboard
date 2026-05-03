@@ -8,20 +8,27 @@ export function LoginPage() {
 
   const { login } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: ""
+  });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
   const [sending, setSending] = useState(false); //to prevent spamming button
 
+
+  const handleFormChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
   async function handleLogin() {
     if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    if (!username.trim() || !password.trim()) {
+    if (!formData.username.trim() || !formData.password.trim()) {
       setMessage("Missing Input");
       setMessageType("Error");
       setSending(false);
@@ -36,8 +43,8 @@ export function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username,
-          password: password,
+          username: formData.username,
+          password: formData.password
         }),
       });
 
@@ -52,7 +59,7 @@ export function LoginPage() {
         setTimeout(() => {
           setSending(false);
           navig("/control_panel");
-        }, 2200);
+        }, 2000);
       }
       else {
         setMessage(data.message);
@@ -62,18 +69,15 @@ export function LoginPage() {
     } catch (error) {
       setMessage(error.message);
       setMessageType("Error");
+      setSending(false);
     }
   }
 
   return (
     <div>
-      <Logo />
-      <Fields
-        username={username}
-        setUsername={setUsername}
-        password={password}
-        setPassword={setPassword}
-      />
+      <h1>LOG IN</h1>
+      
+      <Fields formData={formData} handleFormChange={handleFormChange} />
 
       <TextForSignup sending={sending} />
 
@@ -86,25 +90,21 @@ export function LoginPage() {
   );
 }
 
-function Logo() {
-  return <h1>LOG IN</h1>;
-}
-
-function Fields({ username, password, setUsername, setPassword }) {
+function Fields({ formData, handleFormChange }) {
   return (
     <div>
       <input
         type="text"
         placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        value={formData.username}
+        onChange={(e) => handleFormChange("username", e.target.value)}
       />{" "}
       <br />
       <input
         type="password"
         placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        value={formData.password}
+        onChange={(e) => handleFormChange("password",e.target.value)}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import { useAuth } from "./authContext";
@@ -59,7 +59,7 @@ function Graph({ id }) {
 }
 
 function SensorChart({ values, timestamps }) {
-  const data = {
+  const chartData = useMemo(() => ({
     labels: timestamps,
     datasets: [{
       label: 'Τιμή Μέτρησης',
@@ -68,16 +68,19 @@ function SensorChart({ values, timestamps }) {
       borderColor: 'rgb(75, 192, 192)',
       tension: 0.1,
     }],
-  };
+  }), [values, timestamps]);
 
-  return <Line data={data} />;
+  return <Line data={chartData} />;
 }
 
 //shows all sensor data
 function ShowMetadata({ id }) {
-  const [sensorName, setSensorName] = useState("");
-  const [sensorCategory, setSensorCategory] = useState("");
-  const [sensorMetadata, setSensorMetadata] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    metadata: "",
+    category: ""
+  });
 
   const { token } = useAuth();
 
@@ -99,17 +102,19 @@ function ShowMetadata({ id }) {
 
     const data = await response.json();
     if (response.ok) {
-      setSensorName(data.name);
-      setSensorCategory(data.category);
-      setSensorMetadata(data.metadata);
+      setFormData({
+        name: data.name,
+        metadata: data.metadata,
+        category: data.category
+      })
     }
   }
 
   return (
     <div>
-      <p>{sensorName}</p>
-      <p>{sensorCategory}</p>
-      <p>{sensorMetadata}</p>
+      <p>{formData.name}</p>
+      <p>{formData.metadata}</p>
+      <p>{formData.category}</p>
     </div>
   )
 }
