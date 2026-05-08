@@ -7,11 +7,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [role, setRole] = useState(() => localStorage.getItem("role"));
 
-  useEffect(() => {
-   
-    setToken(localStorage.getItem("token"));
-    setRole(localStorage.getItem("role"));
-  }, []);
 
   const login = (newToken, newRole) => {
     localStorage.setItem("token", newToken);

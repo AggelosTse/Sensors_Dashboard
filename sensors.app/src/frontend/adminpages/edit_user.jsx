@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { useAuth } from "../authContext";
+import { useAuth } from "../../context/authContext";
 
 export function EditUser() {
   const location = useLocation();
