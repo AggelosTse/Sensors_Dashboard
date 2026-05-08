@@ -85,7 +85,7 @@ export function SignUpPage() {
       <Fields formData={formData} handleFormChange={handleFormChange} />
 
       <button onClick={handleSignUp} disabled={sending}>
-        {issending ? "Processing..." : "Sign Up"}
+        {sending ? "Processing..." : "Sign Up"}
       </button>
 
       <ServerMessage message={serverMessage} messagetype={serverMessageType} />
@@ -104,15 +104,15 @@ function Fields({ formData, handleFormChange }) {
 
   return (
     <div>
-      {fieldConfigs.map((f) => (
+      {fields.map((f) => (
         <div key={f.name}>
           <input
             name={f.name}
             type={f.type}
             placeholder={f.placeholder}
             value={formData[f.name]}
-            onChange={(e) => handleFormChange(field.label, e.target.value)}
-            required={field.type === "email" || ""}
+            onChange={(e) => handleFormChange(f.name, e.target.value)}
+            required={f.type === "email" || ""}
           />
           <br />
         </div>
