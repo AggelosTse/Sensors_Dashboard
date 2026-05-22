@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../authContext";
+import { useAuth } from "../../context/authContext.jsx";
 
 export function AddSensors() {
 

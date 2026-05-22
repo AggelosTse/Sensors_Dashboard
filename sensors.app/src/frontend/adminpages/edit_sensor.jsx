@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../authContext";
+import { useAuth } from "../../context/authContext.jsx";
 
 export function EditSensor() {
   const location = useLocation();

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
-import "../index.css";
+import { useAuth } from "../../context/authContext.jsx";
+import "../../index.css";
 
 export function SignUpPage() {
 
