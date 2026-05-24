@@ -323,7 +323,41 @@ def editSensorManager(username, role):
             "messagetype": "Error",
             "message": "Internal Server Error"
             }),500
+      
         
+@app.route("/deletesensor", methods=["POST"])
+@token_required
+def deleteSensorManager(username, role): 
+    
+    if role != "admin":
+        return jsonify({"message": "Permission denied"}), 403
+    
+    try:
+        data = request.get_json()
+        sensorID = data.get("id")
+        
+        sensor = db.session.get(Sensor, sensorID)
+
+        if sensor is None:
+                return jsonify({
+                    "messagetype": "Error",
+                    "message": f"Sensor with ID: {sensorID} couldnt be found",
+                    }),404
+                
+        db.session.delete(sensor)
+        db.session.commit()
+        
+        return jsonify({
+            "messagetype": "Valid", 
+            "message": "Sensor deleted."
+            }), 200
+
+    except Exception as error:
+        return jsonify({
+            "messagetype": "Error",
+            "message": "Internal Server Error"
+            }),500
+    
 @app.route("/getSensorsData", methods=["GET"])
 @token_required
 def getAllSensorsData(username, role):  
@@ -377,18 +411,23 @@ def getAllSensorsData(username, role):
 def getMeasurementsManager(username, role):
     try:
         sensorID = request.args.get("id")
+        resolution = request.args.get("resolution","hour") #default hour
         
+        truncated_time = func.date_trunc(resolution, Measurement.timestamp)
+
         measurements = db.session.execute(
-            db.select(Measurement)
-            .filter_by(sensor_id=sensorID)
-            .order_by(Measurement.timestamp.asc())
-        ).scalars().all()
-
-        sensorValues = [m.value for m in measurements]
-        sensorTimestamps = [m.timestamp for m in measurements]
+            db.select(truncated_time.label("time"),
+                func.avg(Measurement.value).label("average_value"))
+            .where(Measurement.sensor_id == sensorID)
+            .group_by(truncated_time) 
+            .order_by(truncated_time.asc()) 
+        ).all() 
         
-        sensorData = {"values": sensorValues, "timestamps": sensorTimestamps}
-
+        sensorData = {
+            "timestamps": [row.time.isoformat() for row in measurements],
+            "values": [round(float(row.average_value), 2) for row in measurements]
+        }
+        
         return jsonify(sensorData), 200
 
     except Exception as error:
@@ -415,10 +454,10 @@ def storeNewDataManager(username, role):
 
         new_measurement = Measurement(
             value=currentSensorValue,
-            timestamp=currentTimestamp,
+            timestamp=datetime.fromisoformat(currentTimestamp.replace("Z", "+00:00")),
             sensor_id=currentSensorID
         ) 
-        
+    
         db.session.add(new_measurement)
         db.session.commit()
         

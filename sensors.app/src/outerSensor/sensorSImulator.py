@@ -5,7 +5,7 @@ import os
 import sys
 from flask import Flask
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timezone
 
 #go to root
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,8 +64,7 @@ def simulate(token):
             elif sensorCategory == "Temperature":
                 randomValue = random.randrange(-50,100)
             
-            timestamp = time.time()
-            current_time = datetime.fromtimestamp(timestamp)
+            current_time = datetime.now(timezone.utc)   #utc format
             
             sensorNewData = {
                     "sensorID" : randomSensor.id,
@@ -73,6 +72,7 @@ def simulate(token):
                     "timestamp" : current_time.isoformat()
                 }
             headers = {"Authorization": f"Bearer {token}"}
+           
             try:
 
                 res = requests.post("http://localhost:8001/sensorNewDataStore",json= sensorNewData, headers=headers)

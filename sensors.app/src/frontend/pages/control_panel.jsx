@@ -4,14 +4,29 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/authContext.jsx";
 import Swal from "sweetalert2";
 import { Pie, Bar } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from "chart.js";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from "chart.js";
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
-
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
+);
 
 export function ControlPanel() {
-
-  const [sensorInfoStats, setSensorInfoStats] = useState([])
+  const [sensorInfoStats, setSensorInfoStats] = useState([]);
 
   const [sensorList, setSensorlist] = useState([]);
 
@@ -24,15 +39,13 @@ export function ControlPanel() {
     //load data when page loads
     setErrorOccured(false);
     getSensorData();
-
   }, []);
-
 
   async function getSensorData() {
     const response = await fetch("http://localhost:8001/getSensorsData", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -41,25 +54,21 @@ export function ControlPanel() {
     if (response.ok) {
       setErrorOccured(false);
 
+      let infoStats = [];
+      infoStats.push(data.sensorInfoStats.sumOfSensors);
+      infoStats.push(data.sensorInfoStats.sumOfMeasurements);
+      infoStats.push(data.sensorInfoStats.avgTemp);
+      infoStats.push(data.sensorInfoStats.avgHumid);
 
-      let infoStats = []
-      infoStats.push(data.sensorInfoStats.sumOfSensors)
-      infoStats.push(data.sensorInfoStats.sumOfMeasurements)
-      infoStats.push(data.sensorInfoStats.avgTemp)
-      infoStats.push(data.sensorInfoStats.avgHumid)
-
-      setSensorInfoStats(infoStats)
-
+      setSensorInfoStats(infoStats);
 
       const combined = data.sensorTable.names.map((sensorName, index) => ({
         id: data.sensorTable.id[index],
         name: sensorName,
-        category: data.sensorTable.categories[index]
+        category: data.sensorTable.categories[index],
       }));
       setSensorlist(combined);
-
-    }
-    else {
+    } else {
       setErrorOccured(true);
       setMessage(data.message);
     }
@@ -71,7 +80,12 @@ export function ControlPanel() {
 
       <SensorGraphs sensorList={sensorList} sensorInfoStats={sensorInfoStats} />
 
-      <SensorsTable sensorList={sensorList} errorOccured={errorOccured} serverMessage={serverMessage} />
+      <SensorsTable
+        sensorList={sensorList}
+        getSensorData={getSensorData}
+        errorOccured={errorOccured}
+        serverMessage={serverMessage}
+      />
 
       {role === "admin" && <UsersTable />}
     </div>
@@ -85,19 +99,16 @@ function Boxes({ sensorInfoStats }) {
       <div className="boxes">TOTAL MEASUREMENTS: {sensorInfoStats[1]} </div>
       <div className="boxes">AVERAGE TEMPERATURE: {sensorInfoStats[2]} </div>
       <div className="boxes">AVERAGE HUMIDITY: {sensorInfoStats[3]} </div>
-
     </div>
   );
 }
 
 function SensorGraphs({ sensorList, sensorInfoStats }) {
-
   //counts is a dict
   const counts = sensorList.reduce((acc, s) => {
-    acc[s.category] = (acc[s.category] || 0) + 1;  //format "humidity" : 4 
+    acc[s.category] = (acc[s.category] || 0) + 1; //format "humidity" : 4
     return acc;
   }, {});
-
 
   const pieData = {
     labels: Object.keys(counts),
@@ -125,7 +136,14 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", marginTop: "40px" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-around",
+        flexWrap: "wrap",
+        marginTop: "40px",
+      }}
+    >
       <div style={{ width: "350px" }}>
         <h3>Κατανομή Αισθητήρων</h3>
         <Pie data={pieData} />
@@ -136,18 +154,67 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
       </div>
     </div>
   );
-
 }
 
 //sensors table with all sensors on the control panel
-function SensorsTable({ sensorList, errorOccured, serverMessage }) {
-
+function SensorsTable({
+  sensorList,
+  getSensorData,
+  errorOccured,
+  serverMessage,
+}) {
   const navig = useNavigate();
-  const { role } = useAuth();
+  const { role, token } = useAuth();
+
+  const confirmationWndow = async (sensorid) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const response = await fetch("http://localhost:8001/deletesensor", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: sensorid,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          await Swal.fire({
+            title: "Deleted!",
+            text: data.message,
+            icon: "success",
+          });
+
+          getSensorData();
+        } else {
+          Swal.fire({
+            title: "Error!",
+            text: data.message,
+            icon: "error",
+          });
+        }
+      }
+    });
+  };
 
   return (
     <div>
-      {role === "admin" && (<button onClick={() => navig("/addSensor")}>Add Sensor</button>)}
+      {role === "admin" && (
+        <button onClick={() => navig("/addSensor")}>Add Sensor</button>
+      )}
       <div>
         <table>
           <thead>
@@ -156,13 +223,15 @@ function SensorsTable({ sensorList, errorOccured, serverMessage }) {
               <th>Name</th>
               <th>Category</th>
               <th>Actions</th>
-              <th>Details</th>
             </tr>
           </thead>
           <tbody>
             {errorOccured ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                <td
+                  colSpan="4"
+                  style={{ textAlign: "center", color: "red", padding: "20px" }}
+                >
                   {serverMessage}
                 </td>
               </tr>
@@ -174,14 +243,29 @@ function SensorsTable({ sensorList, errorOccured, serverMessage }) {
                   <td>{sensor.category}</td>
                   <td>
                     {role === "admin" && (
-                      <button onClick={() => navig("/edit_sensor", { state: { id: sensor.id } })}>
+                      <button
+                        onClick={() =>
+                          navig("/edit_sensor", { state: { id: sensor.id } })
+                        }
+                      >
                         Edit
                       </button>
                     )}
-                  </td>
-                  <td>
-                    <button onClick={() => navig("/sensorMoreInfo", { state: { id: sensor.id } })}>
+
+                    <button
+                      onClick={() =>
+                        navig("/sensorMoreInfo", { state: { id: sensor.id } })
+                      }
+                    >
                       More Info
+                    </button>
+                    <button
+                      onClick={() => {
+                        confirmationWndow(sensor.id);
+                      }}
+                    >
+                      {" "}
+                      Delete{" "}
                     </button>
                   </td>
                 </tr>
@@ -194,7 +278,6 @@ function SensorsTable({ sensorList, errorOccured, serverMessage }) {
   );
 }
 
-
 function UsersTable() {
   const [userlist, setUserlist] = useState([]);
   const [errorOccured, setErrorOccured] = useState(false);
@@ -202,21 +285,20 @@ function UsersTable() {
 
   const navig = useNavigate();
 
-  const { token } = useAuth();
+  const { token, username } = useAuth();
 
-
+  
   useEffect(() => {
     //load data when page loads
     setErrorOccured(false);
     getUsersData();
-
   }, []);
 
   async function getUsersData() {
     const response = await fetch("http://localhost:8001/getUserData", {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
@@ -232,8 +314,7 @@ function UsersTable() {
         fullname: data.fullnames[index],
       }));
       setUserlist(combined);
-    }
-    else {
+    } else {
       setErrorOccured(true);
       setMessage(data.message);
     }
@@ -253,7 +334,7 @@ function UsersTable() {
         const response = await fetch("http://localhost:8001/deleteuser", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             Accept: "application/json",
             "Content-Type": "application/json",
           },
@@ -273,8 +354,6 @@ function UsersTable() {
 
           getUsersData();
         } else {
-
-
           Swal.fire({
             title: "Error!",
             text: data.message,
@@ -288,7 +367,6 @@ function UsersTable() {
   if (errorOccured) {
     return (
       <div>
-
         <div>
           <table>
             <thead>
@@ -302,7 +380,10 @@ function UsersTable() {
             </thead>
             <tbody>
               <tr>
-                <td colSpan="5" style={{ textAlign: "center", color: "red", padding: "20px" }}>
+                <td
+                  colSpan="5"
+                  style={{ textAlign: "center", color: "red", padding: "20px" }}
+                >
                   {serverMessage}
                 </td>
               </tr>
@@ -329,23 +410,53 @@ function UsersTable() {
             </tr>
           </thead>
           <tbody>
-            {userlist.map((user, index) => (
-              <tr key={index}>
-                <td>{user.id}</td>
-                <td>{user.username}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>
-                  <button onClick={() => navig("/edit_user", { state: { id: user.id, }, })}>Edit</button>
-                  <button onClick={() => { confirmationWndow(user.id); }}> Delete </button>
-                </td>
-              </tr>
-            ))}
+            {userlist.map((user, index) => {
+
+              //current user shouldnt  delete or edit himself
+              const isCurrentUser = user.username === username;
+
+              return (
+                <tr key={user.id || index}>
+                  <td>{user.id}</td>
+                  <td>
+                    {user.username}
+                    {isCurrentUser && (
+                      <span style={{ color: "gray", marginLeft: "5px" }}>
+                      </span>
+                    )}
+                  </td>
+                  <td>{user.email}</td>
+                  <td>{user.role}</td>
+                  <td>
+                    {isCurrentUser ? (
+                      <span style={{ color: "gray", fontStyle: "italic" }}>
+                        Current User
+                      </span>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() =>
+                            navig("/edit_user", { state: { id: user.id } })
+                          }
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            confirmationWndow(user.id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
-
-

@@ -54,7 +54,7 @@ export function LoginPage() {
         setMessage(data.message);
         setMessageType(data.messagetype);
 
-        login(data.token, data.role);
+        login(data.token, data.role, formData.username);
 
         setTimeout(() => {
           setSending(false);

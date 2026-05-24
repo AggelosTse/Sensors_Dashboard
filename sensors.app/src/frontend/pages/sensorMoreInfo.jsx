@@ -22,16 +22,17 @@ export function SensorMoreInfo() {
 //shows a graph of all sensor's measurements
 function Graph({ id }) {
   const [sensorData, setSensorData] = useState(null);
+  const [resolution, setResolution] = useState("hour");
 
   const { token } = useAuth();
 
   useEffect(() => {
-    fetchSensorMeasurements(id);
-  }, [id]);
+    fetchSensorMeasurements();
+  }, [id,resolution]);
 
-  async function fetchSensorMeasurements(id) {
+  async function fetchSensorMeasurements() {
     const response = await fetch(
-      `http://localhost:8001/getMeasurements?id=${id}`,
+      `http://localhost:8001/getMeasurements?id=${id}&resolution=${resolution}`,
       {
         method: "GET",
         headers: {
@@ -47,22 +48,43 @@ function Graph({ id }) {
       setSensorData(data);
     }
   }
-  if (!sensorData) {
-    return null;
-  }
-  
   return (
-    <SensorChart
-      values={sensorData.values}
-      timestamps={sensorData.timestamps}
-    />
+    <div>
+
+    <div style={{ marginBottom: "20px" }}>
+      <label>Χρονική Ανάλυση: </label>
+
+      <select
+        value={resolution}
+        onChange={(e) => setResolution(e.target.value)}
+      >
+        <option value="hour">Ανά Ώρα</option>
+        <option value="day">Ανά Ημέρα</option>
+        <option value="month">Ανά Μήνα</option>
+      </select>
+    </div>
+
+    {sensorData && (
+      <SensorChart
+        values={sensorData.values}
+        timestamps={sensorData.timestamps}
+      />
+    )}
+  </div>
   );
 }
 
 function SensorChart({ values, timestamps }) {
 
   const chartData = useMemo(() => ({
-    labels: timestamps,
+    labels: timestamps.map(t =>
+      new Date(t).toLocaleString("el-GR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+      })
+    ),
     datasets: [{
       label: 'Τιμή Μέτρησης',
       data: values,

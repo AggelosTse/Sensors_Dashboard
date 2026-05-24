@@ -59,7 +59,7 @@ export function SignUpPage() {
 
         // if token exists after sign up, you automatically log in
         if (data.token) {
-          login(data.token, data.role);
+          login(data.token, data.role, formData.username);
         }
 
         setTimeout(() => {
