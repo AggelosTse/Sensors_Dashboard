@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext.jsx";
-
+import "../pagesStyles/login.css";
 
 export function LoginPage() {
   const navig = useNavigate();
@@ -10,14 +10,13 @@ export function LoginPage() {
 
   const [formData, setFormData] = useState({
     username: "",
-    password: ""
+    password: "",
   });
 
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
 
   const [sending, setSending] = useState(false); //to prevent spamming button
-
 
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -44,7 +43,7 @@ export function LoginPage() {
         },
         body: JSON.stringify({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
         }),
       });
 
@@ -60,8 +59,7 @@ export function LoginPage() {
           setSending(false);
           navig("/control_panel");
         }, 2000);
-      }
-      else {
+      } else {
         setMessage(data.message);
         setMessageType(data.messagetype);
         setSending(false);
@@ -76,7 +74,7 @@ export function LoginPage() {
   return (
     <div>
       <h1>LOG IN</h1>
-      
+
       <Fields formData={formData} handleFormChange={handleFormChange} />
 
       <TextForSignup sending={sending} />
@@ -104,7 +102,7 @@ function Fields({ formData, handleFormChange }) {
         type="password"
         placeholder="Password"
         value={formData.password}
-        onChange={(e) => handleFormChange("password",e.target.value)}
+        onChange={(e) => handleFormChange("password", e.target.value)}
       />
     </div>
   );
