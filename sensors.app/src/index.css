@@ -1,8 +1,311 @@
-.statusMessageError{
-    color: red;
-    font-weight: bold;
-}
-.statusMessageValid{
-    color: green;
-    font-weight: bold;
-}
+/* ==========================================================================
+   1. ANIMATIONS & LIFE
+   ========================================================================== */
+   @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes inputGlow {
+    0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.2); }
+    100% { box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.4); }
+  }
+  
+  /* ==========================================================================
+     2. GLOBAL STYLES & CENTRALIZATION
+     ========================================================================== */
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f6f8fc 0%, #eef2f7 100%);
+    color: #1f2937;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+  
+  #root {
+    width: 100%;
+    max-width: 1100px;
+    padding: 30px 15px;
+    box-sizing: border-box;
+  }
+  
+  /* The main container wrapper for your pages */
+  #root > div {
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 16px -6px rgba(0, 0, 0, 0.03);
+    
+    /* Smooth page entrance animation */
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* ==========================================================================
+     3. TYPOGRAPHY
+     ========================================================================== */
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #111827;
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  
+  p {
+    text-align: center;
+    color: #4b5563;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  
+  /* ==========================================================================
+     4. TIGHT & SLEEK FORM FIELDS
+     ========================================================================== */
+  /* Brings fields closer together and keeps them uniformly centered */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  select {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    margin: 4px auto 12px auto; /* Reduced margin to bring inputs closer */
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #fafafa;
+    color: #1f2937;
+    transition: all 0.25s ease;
+  }
+  
+  input:hover, select:hover {
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+  }
+  
+  input:focus, select:focus {
+    outline: none;
+    background-color: #ffffff;
+    border-color: #4f46e5;
+    animation: inputGlow 0.3s forwards;
+  }
+  
+  label {
+    display: block;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 10px;
+  }
+  
+  /* Shrinks the space created by <br /> tags inside forms */
+  br {
+    display: none; 
+  }
+  
+  /* ==========================================================================
+     5. INTERACTIVE BUTTONS & LINKS
+     ========================================================================== */
+  button {
+    display: block;
+    margin: 16px auto 8px auto;
+    background-color: #4f46e5;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  button:hover {
+    background-color: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -1px rgba(79, 70, 229, 0.3);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button:disabled {
+    background-color: #d1d5db;
+    color: #9ca3af;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Action Buttons inside Data Tables */
+  td button {
+    display: inline-block;
+    margin: 2px 4px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+  
+  td button:hover {
+    background-color: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+    transform: translateY(-1px);
+  }
+  
+  td button:last-of-type {
+    color: #ef4444;
+    border-color: #fee2e2;
+  }
+  
+  td button:last-of-type:hover {
+    background-color: #ef4444;
+    color: white;
+    border-color: #ef4444;
+  }
+  
+  a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  
+  a:hover {
+    color: #312e81;
+    text-decoration: underline;
+  }
+  
+  /* ==========================================================================
+     6. CONTROL PANEL STAT CARDS (.boxes)
+     ========================================================================== */
+  .boxes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+  
+  .boxes {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #4b5563;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    border-bottom: 4px solid #4f46e5;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+  }
+  
+  /* Pop-out spring effect on card hover */
+  .boxes:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08);
+  }
+  
+  .boxes:nth-child(2) { border-bottom-color: #06b6d4; }
+  .boxes:nth-child(3) { border-bottom-color: #f59e0b; }
+  .boxes:nth-child(4) { border-bottom-color: #ec4899; }
+  
+  /* ==========================================================================
+     7. CLEAN, RESPONSIVE DATA TABLES
+     ========================================================================== */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0 30px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+  
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+  }
+  
+  th {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1.5px solid #e5e7eb;
+  }
+  
+  td {
+    border-bottom: 1px solid #f3f4f6;
+    background-color: #ffffff;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  tbody tr:hover td {
+    background-color: #f8fafc; /* Lively row highlight */
+  }
+  
+  /* ==========================================================================
+     8. STATUS MESSAGES
+     ========================================================================== */
+  .statusMessageError, 
+  .statusMessageValid {
+    max-width: 360px;
+    margin: 12px auto 0 auto;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    animation: fadeInUp 0.2s ease-out;
+  }
+  
+  .statusMessageError {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  
+  .statusMessageValid {
+    background-color: #f0fdf4;
+    color: #166534;
+    border: 1px solid #86efac;
+  }
