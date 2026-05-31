@@ -13,7 +13,8 @@ root_dir = os.path.abspath(os.path.join(base_dir, '..', '..', '..'))
 
 #go to src
 src_path = os.path.join(root_dir, 'sensors.app', 'src')
-sys.path.append(src_path)
+if src_path not in sys.path:
+    sys.path.append(src_path)
 
 from database.databaseModels import db, Sensor
 
@@ -64,12 +65,12 @@ def simulate(token):
             elif sensorCategory == "Temperature":
                 randomValue = random.randrange(-50,100)
             
-            current_time = datetime.now(timezone.utc)   #utc format
+            current_time = datetime.now(timezone.utc).timestamp()
             
             sensorNewData = {
                     "sensorID" : randomSensor.id,
                     "sensorValue" : randomValue,
-                    "timestamp" : current_time.isoformat()
+                    "timestamp" : current_time
                 }
             headers = {"Authorization": f"Bearer {token}"}
            

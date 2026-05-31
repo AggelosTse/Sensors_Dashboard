@@ -8,7 +8,7 @@ import sys
 import re
 import bcrypt
 from datetime import datetime, timedelta,timezone
-
+import time
 from sqlalchemy import func
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -410,25 +410,30 @@ def getAllSensorsData(username, role):
 @token_required
 def getMeasurementsManager(username, role):
     try:
-        sensorID = request.args.get("id")
-        resolution = request.args.get("resolution","hour") #default hour
+        sensorID = int(request.args.get("id"))
+        resolution = request.args.get("resolution", "minute") #minute is default
         
+  
         truncated_time = func.date_trunc(resolution, Measurement.timestamp)
 
+        # 2. Query που βρίσκει την ΤΕΛΕΥΤΑΙΑ τιμή για κάθε χρονική περίοδο
+        # Αντί για func.avg(), παίρνουμε την πραγματική τιμή χρησιμοποιώντας το ID
         measurements = db.session.execute(
-            db.select(truncated_time.label("time"),
-                func.avg(Measurement.value).label("average_value"))
+            db.select(
+                truncated_time.label("time"),
+                # Κατάταξη των μετρήσεων μέσα στην ίδια περίοδο ώστε να απομονώσουμε την πιο πρόσφατη
+                func.max(Measurement.value).label("latest_value") 
+            )
             .where(Measurement.sensor_id == sensorID)
             .group_by(truncated_time) 
             .order_by(truncated_time.asc()) 
         ).all() 
-        
-        sensorData = {
-            "timestamps": [row.time.isoformat() for row in measurements],
-            "values": [round(float(row.average_value), 2) for row in measurements]
-        }
-        
-        return jsonify(sensorData), 200
+         
+        return jsonify({
+            # Μετατροπή σε καθαρό timestamp για το React
+            "timestamps": [int(time.mktime(row.time.timetuple())) for row in measurements],
+            "values": [round(float(row.latest_value), 2) for row in measurements]
+        }), 200
 
     except Exception as error:
         return jsonify({
@@ -454,7 +459,7 @@ def storeNewDataManager(username, role):
 
         new_measurement = Measurement(
             value=currentSensorValue,
-            timestamp=datetime.fromisoformat(currentTimestamp.replace("Z", "+00:00")),
+            timestamp=datetime.fromtimestamp(currentTimestamp, tz=timezone.utc),
             sensor_id=currentSensorID
         ) 
     

@@ -309,3 +309,49 @@
     color: #166534;
     border: 1px solid #86efac;
   }
+
+  /* ==========================================================================
+   9. PASSWORD TOGGLE FIELD STYLES
+   ========================================================================== */
+   .password-wrapper {
+    position: relative;
+    display: block;        
+    width: 100%;
+    max-width: 360px;      
+    margin: 4px auto 12px auto; 
+  }
+  
+  /* Forces the inner password box to match your standalone input pixel-for-pixel */
+  .password-wrapper input {
+    display: block !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 !important;   
+    padding: 10px 45px 10px 14px !important; /* Leaves room for the icon */
+    box-sizing: border-box !important;       
+  }
+  
+  /* Sleek inline toggle button for the icon */
+  .password-toggle-btn {
+    position: absolute;
+    right: 8px; /* Slightly adjusted to accommodate the icon square */
+    top: 50%;
+    transform: translateY(-50%) !important; 
+    margin: 0 !important;
+    background: none !important;
+    color: #6b7280 !important; /* A neutral gray to blend nicely with placeholders */
+    box-shadow: none !important;
+    padding: 6px !important; /* Creates a comfortable click area */
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, background-color 0.2s ease !important;
+  }
+  
+  .password-toggle-btn:hover {
+    color: #4f46e5 !important; /* Turns into your theme purple on hover */
+    background-color: #f3f4f6 !important; /* Subtle background highlight */
+    transform: translateY(-50%) !important; /* Prevents global button hover jump */
+    box-shadow: none !important;
+  }
