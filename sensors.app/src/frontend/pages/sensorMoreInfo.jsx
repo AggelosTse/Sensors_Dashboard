@@ -3,25 +3,40 @@ import { useLocation } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import { useAuth } from "../../context/authContext.jsx";
 
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Title, 
+  Tooltip, 
+  Legend 
+} from "chart.js";
 
+// Register Chart.js components globally for this file
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export function SensorMoreInfo() {
   const location = useLocation();
-  const id = location.state.id;
+  // Safe extraction check in case state is missing
+  const id = location.state?.id;
+
+  if (!id) {
+    return <div style={{ padding: "20px", color: "red" }}>Σφάλμα: Δεν βρέθηκε ID αισθητήρα.</div>;
+  }
   
   return (
-    <div>
+    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
       <Graph id={id} />
+      <hr style={{ margin: "40px 0", borderColor: "#eee" }} />
       <ShowMetadata id={id} />
     </div>
   );
 }
 
-//shows a graph of all sensor's measurements
+// Shows a graph of all sensor's measurements
 function Graph({ id }) {
-  
   const [sensorData, setSensorData] = useState(null);
   const [resolution, setResolution] = useState("minute");
   const [loading, setLoading] = useState(false);
@@ -30,7 +45,6 @@ function Graph({ id }) {
   const { token } = useAuth();
 
   useEffect(() => {
-  
     if (id && token) {
       fetchSensorMeasurements();
     }
@@ -74,7 +88,6 @@ function Graph({ id }) {
     if (!sensorData || !sensorData.timestamps) return [];
 
     return sensorData.timestamps.map((ts) => {
-      // Μετατροπή των δευτερολέπτων (Python) σε milliseconds (JS)
       const timestampSeconds = Number(ts);
       if (isNaN(timestampSeconds)) return "Άγνωστη Ώρα";
       const date = new Date(timestampSeconds * 1000);
@@ -86,7 +99,6 @@ function Graph({ id }) {
         return date.toLocaleString("el-GR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
       }
 
-      // Διαφορετικό format ανάλογα με το επιλεγμένο resolution
       if (resolution === "hour") {
         return date.toLocaleString("el-GR", {
           day: "numeric",
@@ -114,10 +126,11 @@ function Graph({ id }) {
     <div>
       {/* Φίλτρο Χρονικής Ανάλυσης */}
       <div style={{ marginBottom: "20px" }}>
-        <label>Χρονική Ανάλυση: </label>
+        <label style={{ fontWeight: "bold", marginRight: "10px" }}>Χρονική Ανάλυση: </label>
         <select
           value={resolution}
           onChange={(e) => setResolution(e.target.value)}
+          style={{ padding: "6px 12px", borderRadius: "4px", border: "1px solid #ccc" }}
         >
           <option value="minute">Ανά Λεπτό</option>
           <option value="hour">Ανά Ώρα</option>
@@ -127,46 +140,53 @@ function Graph({ id }) {
       </div>
 
       {/* State Messages */}
-      {loading && <p>Φόρτωση δεδομένων...</p>}
+      {loading && <p style={{ color: "#666" }}>Φόρτωση δεδομένων...</p>}
       {error && <p style={{ color: "red" }}>⚠️ {error}</p>}
 
-      {/* Εμφάνιση του Γράφου με τα νέα μορφοποιημένα timestamps */}
-      {!loading && sensorData && sensorData.values.length > 0 && (
-        <SensorChart
-          values={sensorData.values}
-          timestamps={getFormattedLabels()} // Εδώ περνάει το array με τα έτοιμα strings
-        />
+      {/* Εμφάνιση του Γράφου */}
+      {!loading && sensorData && sensorData.values && sensorData.values.length > 0 && (
+        <div style={{ maxWidth: "900px", margin: "0 auto", backgroundColor: "#fff", padding: "15px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
+          <SensorChart
+            values={sensorData.values}
+            timestamps={getFormattedLabels()} // Passing clean Greek strings down
+          />
+        </div>
       )}
 
       {/* Έλεγχος για άδεια δεδομένα */}
-      {!loading && sensorData && sensorData.values.length === 0 && (
-        <p>Δεν βρέθηκαν μετρήσεις για τον συγκεκριμένο αισθητήρα.</p>
+      {!loading && sensorData && (!sensorData.values || sensorData.values.length === 0) && (
+        <p style={{ color: "#777", fontStyle: "italic" }}>Δεν βρέθηκαν μετρήσεις για τον συγκεκριμένο αισθητήρα.</p>
       )}
     </div>
   );
 }
 
+// Cleaned up child chart component
 function SensorChart({ values, timestamps }) {
-
   const chartData = useMemo(() => ({
-    labels: timestamps.map(t =>
-      new Date(t).toLocaleString("el-GR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-      })
-    ),
+    // FIX: Using timestamps array directly. No more broken new Date(GreekString) mappings!
+    labels: timestamps,
     datasets: [{
       label: 'Τιμή Μέτρησης',
       data: values,
       fill: false,
       borderColor: 'rgb(75, 192, 192)',
+      backgroundColor: 'rgba(75, 192, 192, 0.1)',
       tension: 0.1,
     }],
   }), [values, timestamps]);
 
-  return <Line data={chartData} />;
+  const options = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+    },
+  };
+
+  return <Line data={chartData} options={options} />;
 }
 
 //shows all sensor data

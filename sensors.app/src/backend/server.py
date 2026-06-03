@@ -9,7 +9,7 @@ import re
 import bcrypt
 from datetime import datetime, timedelta,timezone
 import time
-from sqlalchemy import func
+from sqlalchemy import func, DateTime,cast
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -30,7 +30,7 @@ load_dotenv()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-app.config["SECRET_KEY"] = "your_super_secret_safe_key"  #for the token 
+app.config['SECRET_KEY'] = os.environ.get('tokenKey')
 
 db.init_app(app)
 
@@ -64,6 +64,7 @@ def token_required(f):
 
         return f(current_user_username, current_user_role, *args, **kwargs)
     return decorator
+
 #AUTH
 
 @app.route("/loginValidation", methods=["POST"])
@@ -371,14 +372,18 @@ def getAllSensorsData(username, role):
         sensorsSum = db.session.query(func.count(Sensor.id)).scalar()
         measurementsSum = db.session.query(func.count(Measurement.id)).scalar()
         
+        subquery = db.session.query(
+            Sensor.category_id,
+            func.avg(Measurement.value).label('sensor_avg')
+        ).join(Measurement, Sensor.id == Measurement.sensor_id) \
+        .group_by(Sensor.id).subquery()
+
         averages = db.session.query(
             SensorCategory.category,
-            func.avg(Measurement.value)
-        ).select_from(SensorCategory) \
-         .join(Sensor, SensorCategory.id == Sensor.category_id) \
-         .join(Measurement, Sensor.id == Measurement.sensor_id) \
-         .group_by(SensorCategory.category).all()
-        
+            func.avg(subquery.c.sensor_avg)
+        ).join(subquery, SensorCategory.id == subquery.c.category_id) \
+        .group_by(SensorCategory.category).all()
+            
         averageValues = {name: round(val, 2) for name, val in averages}
                 
         sensorData = {
@@ -405,42 +410,51 @@ def getAllSensorsData(username, role):
             }),500
         
 
-# measurements for a specific sensor (used for the more info graph)
 @app.route("/getMeasurements", methods=["GET"])
 @token_required
 def getMeasurementsManager(username, role):
     try:
         sensorID = int(request.args.get("id"))
-        resolution = request.args.get("resolution", "minute") #minute is default
+        resolution = request.args.get("resolution", "minute")  # Default: minute
         
-  
-        truncated_time = func.date_trunc(resolution, Measurement.timestamp)
+        # Λίστα με τα επιτρεπόμενα resolutions για προστασία από SQL Injection
+        valid_resolutions = ["minute", "hour", "day", "month"]
+        if resolution not in valid_resolutions:
+            resolution = "minute"
 
-        # 2. Query που βρίσκει την ΤΕΛΕΥΤΑΙΑ τιμή για κάθε χρονική περίοδο
-        # Αντί για func.avg(), παίρνουμε την πραγματική τιμή χρησιμοποιώντας το ID
-        measurements = db.session.execute(
+        # 1. Κάνουμε truncate το timestamp και το μετατρέπουμε σε DateTime τύπο για την Python
+        truncated_time = cast(func.date_trunc(resolution, Measurement.timestamp), DateTime)
+
+        # 2. Query με DISTINCT ON για να πάρουμε ΜΟΝΟ την τελευταία εγγραφή κάθε περιόδου
+        # Προσοχή: Στο PostgreSQL DISTINCT ON, τα πρώτα πεδία του ORDER BY 
+        # πρέπει να είναι ολόιδια με αυτά του DISTINCT ON.
+        query = (
             db.select(
                 truncated_time.label("time"),
-                # Κατάταξη των μετρήσεων μέσα στην ίδια περίοδο ώστε να απομονώσουμε την πιο πρόσφατη
-                func.max(Measurement.value).label("latest_value") 
+                Measurement.value.label("latest_value")
             )
+            .distinct(truncated_time)  # Μία εγγραφή ανά truncated χρονική περίοδο
             .where(Measurement.sensor_id == sensorID)
-            .group_by(truncated_time) 
-            .order_by(truncated_time.asc()) 
-        ).all() 
+            .order_by(
+                truncated_time.asc(),         # 1ο ταξινόμηση για το DISTINCT
+                Measurement.timestamp.desc()  # 2ο ταξινόμηση: Φέρνει το πιο πρόσφατο timestamp πρώτο
+            )
+        )
+
+        measurements = db.session.execute(query).all()
          
         return jsonify({
-            # Μετατροπή σε καθαρό timestamp για το React
+            # row.time είναι πλέον κανονικό datetime object της Python χάρη στο cast()
             "timestamps": [int(time.mktime(row.time.timetuple())) for row in measurements],
             "values": [round(float(row.latest_value), 2) for row in measurements]
         }), 200
 
     except Exception as error:
+        print(f"Database Error: {error}") # Για να βλέπεις τι φταίει στο τερματικό σου
         return jsonify({
             "messagetype": "Error",
             "message": "Internal Server Error"
-            }),500
-        
+        }), 500
 
 #getting the new values from the sensor simulator script
 @app.route("/sensorNewDataStore", methods=["POST"])
