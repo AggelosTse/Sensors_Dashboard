@@ -32,11 +32,11 @@ To execute the frontend, first open a terminal and head to the sensors.app direc
 
 ### 4. BACKEND
 To execute the backend, open a second terminal and head to the ROOT directory of the project.
-1.Create the venv: python3 -m venv venv
-2.enable it: source venv/bin/activate
-3.download all python packages: pip install -r requirements.txt
-4.head to the backend directory: cd sensors.app/src/backend
-5.execute the server: python3 server.py
+1. Create the venv: python3 -m venv venv
+2. Enable it: source venv/bin/activate
+3. Download all python packages: pip install -r requirements.txt
+4. Head to the backend directory: cd sensors.app/src/backend
+5. Execute the server: python3 server.py
 
 ### 5. SENSOR SIMULATOR SCRIPT
 Once you have the server running, open a third terminal and head to the sensor simulator. Run these commands:
