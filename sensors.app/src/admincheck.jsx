@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./context/authContext.jsx";
 
+//protected route makes sure only autorized users can route to specific endpoints via URL
 export function ProtectedRoute({ roleAllowed }) {
   const { token, role, loading } = useAuth();
 

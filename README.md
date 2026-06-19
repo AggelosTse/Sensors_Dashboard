@@ -24,7 +24,8 @@ For safety and code portability reasons, sensitive connection credentials are no
 3. Open the newly created `.env` file and insert your own local PostgreSQL password by modifying the `DATABASE_URL` variable:
    ```ini
    DATABASE_URL=postgresql://postgres:PASSWORD@localhost:5432/sensorsDashboard_db
-   
+4. inside the .env file, add your own token key in the tokenkey variable
+
 ### 3. FRONTEND
 To execute the frontend, first open a terminal and head to the sensors.app directory. Run these commands:
 1. npm install

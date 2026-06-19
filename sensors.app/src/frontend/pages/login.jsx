@@ -17,6 +17,7 @@ export function LoginPage() {
 
   const [sending, setSending] = useState(false); //to prevent spamming button
 
+  //changes the initialized object dinamically
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
@@ -52,6 +53,7 @@ export function LoginPage() {
         setMessage(data.message);
         setMessageType(data.messagetype);
 
+        //if user logs in, send token and user info in useAuth (authContext script)
         login(data.token, data.role, formData.username);
 
         setTimeout(() => {
@@ -87,6 +89,7 @@ export function LoginPage() {
   );
 }
 
+//user data fields
 function Fields({ formData, handleFormChange }) {
   const [showPassword, setShowPassword] = useState(false);
   return (
@@ -148,6 +151,7 @@ function Fields({ formData, handleFormChange }) {
   );
 }
 
+//sign up button if user doesnt have an account
 function TextForSignup({ sending }) {
   return (
     <div>

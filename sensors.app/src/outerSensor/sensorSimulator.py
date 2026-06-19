@@ -16,6 +16,7 @@ src_path = os.path.join(root_dir, 'sensors.app', 'src')
 if src_path not in sys.path:
     sys.path.append(src_path)
 
+#import db object for database 
 from database.databaseModels import db, Sensor
 
 load_dotenv()
@@ -28,15 +29,17 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 
 def login():
+    
+    #creating and sending my account info 
     logindata = {
         "username" : "aggelos",
-        "password" : "aggelosaggelos"
+        "password" : "aggelos2004"
     } 
     try:
-
         res = requests.post("http://localhost:8001/loginValidation",json=logindata)
+        
+        #if server returns 200, im logged in 
         if(res.status_code == 200):
-            print("logged in!")
             data = res.json()
             token = data.get("token")
             
@@ -49,6 +52,7 @@ def login():
 
 def simulate(token):
     with app.app_context():
+        
         #get all sensor data 
         sensors = sensors = db.session.query(Sensor).all()
     
@@ -59,12 +63,13 @@ def simulate(token):
             #get the category from sensor object via their connection
             sensorCategory = randomSensor.category.category
             
-            
+            #create random measurement values to send
             if sensorCategory == "Humidity":
                 randomValue = random.randrange(0,100)
             elif sensorCategory == "Temperature":
                 randomValue = random.randrange(-50,100)
             
+            #send the unix timestamp along side the measurements
             current_time = datetime.now(timezone.utc).timestamp()
             
             sensorNewData = {
@@ -75,7 +80,7 @@ def simulate(token):
             headers = {"Authorization": f"Bearer {token}"}
            
             try:
-
+                #send them to the specific API endpoint
                 res = requests.post("http://localhost:8001/sensorNewDataStore",json= sensorNewData, headers=headers)
                 print(str(res))
             except Exception as error:

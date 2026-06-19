@@ -13,9 +13,13 @@ export function AddSensors() {
   const [serverMessage, setMessage] = useState("");
   const [serverMessageType, setMessageType] = useState("");
   const [sending, setSending] = useState(false); //to prevent spamming button
+
+  //get token from Auth from API request
   const { token } = useAuth();
+
   const navig = useNavigate();
 
+  //dinamically change formData object
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
@@ -51,7 +55,8 @@ export function AddSensors() {
       if (response.ok) {
         setMessage(data.message);
         setMessageType(data.messagetype);
-
+        
+        //wait 2 seconds before routing to control panel
         setTimeout(() => {
           setSending(false);
           navig("/control_panel");
@@ -75,7 +80,6 @@ export function AddSensors() {
         handleFormChange={handleFormChange}
         setMessage={setMessage}
         setMessageType={setMessageType}
-        sending={sending}
       />
 
       <button onClick={handleAddSensor} disabled={sending}>
@@ -87,7 +91,7 @@ export function AddSensors() {
   );
 }
 
-function AddSensorFields({ formData, handleFormChange, setMessage, setMessageType, sending }) {
+function AddSensorFields({ formData, handleFormChange, setMessage, setMessageType }) {
 
   const [categoryList, setCategoryList] = useState([]);
   const { token } = useAuth();

@@ -22,6 +22,7 @@ export function EditUser() {
 
   const { token } = useAuth();
 
+  //when website renders, get user data. If user data change, run again
   useEffect(() => {
     if (userdata) {
       getChosenUserData(userdata.id);
@@ -29,7 +30,6 @@ export function EditUser() {
   }, [userdata]);
 
   async function getChosenUserData(id) {
-
     try {
       const response = await fetch(
         `http://localhost:8001/getChosenUserData?id=${id}`,
@@ -57,7 +57,7 @@ export function EditUser() {
     }
   }
 
-  //function to update the formData object
+  //function to update the formData object dinamically
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
@@ -131,6 +131,7 @@ export function EditUser() {
   );
 }
 
+//user data fields
 function ChosenUserData({ formData, handleFormChange }) {
   const [showPassword, setShowPassword] = useState(false); 
 
@@ -141,6 +142,7 @@ function ChosenUserData({ formData, handleFormChange }) {
     { label: "fullName", type: "text", placeholder: "Full Name" },
   ];
 
+  //make evry fields element a widget
   return (
     <div>
       {fields.map((field) => {
@@ -195,6 +197,7 @@ function ChosenUserData({ formData, handleFormChange }) {
   );
 }
 
+//user roles selection bar
 function AvailableRoles({ currentRole, handleFormChange, setMessage, setMessageType }) {
   const [availableRoles, setAvailableRoles] = useState([]);
   const { token } = useAuth();

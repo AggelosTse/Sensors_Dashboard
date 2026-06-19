@@ -17,6 +17,7 @@ from database.databaseModels import db, User,Role,SensorCategory,Sensor,Measurem
 
 app = Flask(__name__)
 
+#enable frontend to talk with backend 
 CORS(
     app,
     resources={r"/*": {"origins": "http://localhost:5173"}},
@@ -36,6 +37,7 @@ db.init_app(app)
 
 email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 
+#function for token validation
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -90,8 +92,10 @@ def loginManager():
                 "message": "Invalid username or Password"
                 }),401
         
+        #get name from role relationship variable
         role_name = user.role.name
         
+        #create token
         payload = {
             "iat": datetime.now(timezone.utc),
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),

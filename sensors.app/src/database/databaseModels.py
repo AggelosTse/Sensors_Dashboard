@@ -9,13 +9,15 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
+#roles table
 class Role(Base):
     __tablename__ = "roles"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30))
     
     users: Mapped[List["User"]] = relationship(back_populates="role")
-    
+
+#users table
 class User(Base):
     __tablename__ = "users"
     
@@ -30,6 +32,7 @@ class User(Base):
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))    
     role: Mapped["Role"] = relationship(back_populates="users")
     
+#sensor_Categories table
 class SensorCategory(Base):
     __tablename__ = "sensor_categories"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -37,6 +40,7 @@ class SensorCategory(Base):
 
     sensors: Mapped[List["Sensor"]] = relationship(back_populates="category")
 
+#sensors table
 class Sensor(Base):
     __tablename__ = "sensors"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -47,6 +51,7 @@ class Sensor(Base):
     category: Mapped["SensorCategory"] = relationship(back_populates="sensors")
     measurements: Mapped[List["Measurement"]] = relationship(back_populates="sensor", cascade="all, delete-orphan")
 
+#measurements table
 class Measurement(Base):
     __tablename__ = "measurements"
     id: Mapped[int] = mapped_column(primary_key=True)

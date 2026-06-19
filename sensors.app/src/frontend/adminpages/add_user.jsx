@@ -18,8 +18,10 @@ export function AddUser() {
 
   const [sending, setSending] = useState(false); //to prevent spamming button
 
+  //get token from useAuth for the API request
   const { token } = useAuth();
 
+  //dinamically change formData object
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };

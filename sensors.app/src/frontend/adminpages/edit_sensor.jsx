@@ -6,12 +6,12 @@ export function EditSensor() {
   const location = useLocation();
   const userdata = location.state;
 
-  const [sensorID, setSensorID] = useState(userdata.id || "");  //parsing it from control panel
+  const [sensorID, setSensorID] = useState(userdata.id || ""); //parsing it from control panel
 
   const [formData, setFormData] = useState({
     name: "",
     metadata: "",
-    category: ""
+    category: "",
   });
 
   const [serverMessage, setMessage] = useState("");
@@ -23,19 +23,20 @@ export function EditSensor() {
 
   const { token } = useAuth();
 
+  //when website page renders, get sensor data
   useEffect(() => {
     getChosenSensorData(sensorID);
   }, []);
 
   async function getChosenSensorData(id) {
-
     try {
+      //sending the id as a URL parameter
       const response = await fetch(
         `http://localhost:8001/getChosenSensorData?id=${id}`,
         {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -46,7 +47,7 @@ export function EditSensor() {
         setFormData({
           name: data.name || "",
           metadata: data.metadata || "",
-          category: data.category || ""
+          category: data.category || "",
         });
       }
     } catch (error) {
@@ -56,18 +57,20 @@ export function EditSensor() {
     }
   }
 
-
   const handleFormChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
-
 
   async function submitChanges() {
     if (sending) return; //if true, button is already doing a task
 
     setSending(true);
 
-    if (!formData.name.trim() || !formData.category.trim() || !formData.metadata.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.category.trim() ||
+      !formData.metadata.trim()
+    ) {
       setMessage("Missing Input");
       setMessageType("Error");
       setSending(false);
@@ -78,14 +81,14 @@ export function EditSensor() {
       const response = await fetch("http://localhost:8001/editSensor", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: sensorID,
           name: formData.name,
           category: formData.category,
-          metadata: formData.metadata
+          metadata: formData.metadata,
         }),
       });
 
@@ -95,12 +98,10 @@ export function EditSensor() {
         setMessageType(data.messagetype);
 
         setTimeout(() => {
-
           setSending(false);
           navig("/control_panel");
         }, 2200);
-      }
-      else {
+      } else {
         setMessage(data.message);
         setMessageType(data.messagetype);
         setSending(false);
@@ -114,11 +115,19 @@ export function EditSensor() {
 
   return (
     <div>
-      <ChosenSensorData formData={formData} handleFormChange={handleFormChange} />
+      <ChosenSensorData
+        formData={formData}
+        handleFormChange={handleFormChange}
+      />
 
-      <AvailableCategories currentCategory={formData.category} handleFormChange={handleFormChange} setMessage={setMessage} setMessageType={setMessageType} />
+      <AvailableCategories
+        currentCategory={formData.category}
+        handleFormChange={handleFormChange}
+        setMessage={setMessage}
+        setMessageType={setMessageType}
+      />
 
-      <button onClick={submitChanges} disabled = {sending}>
+      <button onClick={submitChanges} disabled={sending}>
         {sending ? "Sending..." : "EDIT SENSOR"}
       </button>
 
@@ -127,8 +136,8 @@ export function EditSensor() {
   );
 }
 
+//sensor data fields
 function ChosenSensorData({ formData, handleFormChange }) {
-
   return (
     <div>
       <input
@@ -148,9 +157,8 @@ function ChosenSensorData({ formData, handleFormChange }) {
   );
 }
 
-
-function AvailableCategories({ currentCategory, handleFormChange, setMessage, setMessageType }) {
-
+//sensor categories selection bar
+function AvailableCategories({currentCategory,handleFormChange,setMessage,setMessageType}) {
   const [categories, setCategories] = useState([]);
 
   const { token } = useAuth();
@@ -160,16 +168,18 @@ function AvailableCategories({ currentCategory, handleFormChange, setMessage, se
   }, []);
 
   async function fetchSensorCategories() {
-
     try {
-      const response = await fetch("http://localhost:8001/getSensorCategories", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8001/getSensorCategories",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {

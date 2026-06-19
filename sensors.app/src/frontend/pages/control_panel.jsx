@@ -3,26 +3,11 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/authContext.jsx";
 import Swal from "sweetalert2";
 import { Pie, Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+
+import {Chart as ChartJS,ArcElement,Tooltip,Legend,CategoryScale,LinearScale,BarElement,Title
 } from "chart.js";
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title
-);
+ChartJS.register(ArcElement,Tooltip,Legend,CategoryScale,LinearScale,BarElement,Title);
 
 export function ControlPanel() {
   const [sensorInfoStats, setSensorInfoStats] = useState([]);
@@ -34,8 +19,8 @@ export function ControlPanel() {
 
   const { role, token } = useAuth();
 
+  //load data when page loads
   useEffect(() => {
-    //load data when page loads
     setErrorOccured(false);
     getSensorData();
   }, []);
@@ -53,6 +38,7 @@ export function ControlPanel() {
     if (response.ok) {
       setErrorOccured(false);
 
+      //1st element is sum of sensors etc
       let infoStats = [];
       infoStats.push(data.sensorInfoStats.sumOfSensors);
       infoStats.push(data.sensorInfoStats.sumOfMeasurements);
@@ -91,6 +77,7 @@ export function ControlPanel() {
   );
 }
 
+//4 boxes with dashboard statistics
 function Boxes({ sensorInfoStats }) {
   return (
     <div className="boxes-container">
@@ -102,6 +89,7 @@ function Boxes({ sensorInfoStats }) {
   );
 }
 
+// 2 graphs with sensor data
 function SensorGraphs({ sensorList, sensorInfoStats }) {
   //counts is a dict
   const counts = sensorList.reduce((acc, s) => {
@@ -113,7 +101,7 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
     labels: Object.keys(counts),
     datasets: [
       {
-        label: "Πλήθος Αισθητήρων",
+        label: "Sub Of Sensors",
         data: Object.values(counts),
         backgroundColor: ["#4bc0c0", "#36a2eb", "#ffcd56", "#ff6384"],
         borderWidth: 1,
@@ -122,10 +110,10 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
   };
 
   const barData = {
-    labels: ["Θερμοκρασία (°C)", "Υγρασία (%)"],
+    labels: ["Temperature (°C)", "Humidity (%)"],
     datasets: [
       {
-        label: "Μέση Τιμή",
+        label: "Mean Value",
         data: [sensorInfoStats[2], sensorInfoStats[3]],
         backgroundColor: ["rgba(255, 99, 132, 0.5)", "rgba(54, 162, 235, 0.5)"],
         borderColor: ["rgb(255, 99, 132)", "rgb(54, 162, 235)"],
@@ -144,11 +132,11 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
       }}
     >
       <div style={{ width: "350px" }}>
-        <h3>Κατανομή Αισθητήρων</h3>
+        <h3>Sensor Distribution</h3>
         <Pie data={pieData} />
       </div>
       <div style={{ width: "450px" }}>
-        <h3>Μέσοι Όροι Μετρήσεων</h3>
+        <h3>Mean Value of Measurements</h3>
         <Bar data={barData} options={{ responsive: true }} />
       </div>
     </div>
@@ -156,15 +144,12 @@ function SensorGraphs({ sensorList, sensorInfoStats }) {
 }
 
 //sensors table with all sensors on the control panel
-function SensorsTable({
-  sensorList,
-  getSensorData,
-  errorOccured,
-  serverMessage,
-}) {
+function SensorsTable({sensorList,getSensorData,errorOccured,serverMessage,}) {
+
   const navig = useNavigate();
   const { role, token } = useAuth();
-
+  
+  //window for "are you sure" texts when deleting a sensor
   const confirmationWndow = async (sensorid) => {
     Swal.fire({
       title: "Are you sure?",
@@ -196,7 +181,6 @@ function SensorsTable({
             text: data.message,
             icon: "success",
           });
-
           getSensorData();
         } else {
           Swal.fire({
@@ -209,6 +193,7 @@ function SensorsTable({
     });
   };
 
+  //sensors table with delete, more info, edit buttons
   return (
     <div>
       {role === "admin" && (

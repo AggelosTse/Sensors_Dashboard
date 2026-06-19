@@ -1,6 +1,3 @@
-/* ==========================================================================
-   1. ANIMATIONS & LIFE
-   ========================================================================== */
    @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -17,9 +14,6 @@
     100% { box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.4); }
   }
   
-  /* ==========================================================================
-     2. GLOBAL STYLES & CENTRALIZATION
-     ========================================================================== */
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: linear-gradient(135deg, #f6f8fc 0%, #eef2f7 100%);
@@ -39,7 +33,6 @@
     box-sizing: border-box;
   }
   
-  /* The main container wrapper for your pages */
   #root > div {
     margin: 0 auto;
     background: #ffffff;
@@ -47,13 +40,9 @@
     border-radius: 16px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 16px -6px rgba(0, 0, 0, 0.03);
     
-    /* Smooth page entrance animation */
     animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
-  /* ==========================================================================
-     3. TYPOGRAPHY
-     ========================================================================== */
   h1 {
     font-size: 1.6rem;
     font-weight: 800;
@@ -79,10 +68,6 @@
     margin-bottom: 10px;
   }
   
-  /* ==========================================================================
-     4. TIGHT & SLEEK FORM FIELDS
-     ========================================================================== */
-  /* Brings fields closer together and keeps them uniformly centered */
   input[type="text"],
   input[type="password"],
   input[type="email"],
@@ -90,7 +75,7 @@
     display: block;
     width: 100%;
     max-width: 360px;
-    margin: 4px auto 12px auto; /* Reduced margin to bring inputs closer */
+    margin: 4px auto 12px auto; 
     padding: 10px 14px;
     border: 1.5px solid #e5e7eb;
     border-radius: 8px;
@@ -123,14 +108,10 @@
     margin-top: 10px;
   }
   
-  /* Shrinks the space created by <br /> tags inside forms */
   br {
     display: none; 
   }
   
-  /* ==========================================================================
-     5. INTERACTIVE BUTTONS & LINKS
-     ========================================================================== */
   button {
     display: block;
     margin: 16px auto 8px auto;
@@ -164,7 +145,6 @@
     transform: none;
   }
   
-  /* Action Buttons inside Data Tables */
   td button {
     display: inline-block;
     margin: 2px 4px;
@@ -206,9 +186,6 @@
     text-decoration: underline;
   }
   
-  /* ==========================================================================
-     6. CONTROL PANEL STAT CARDS (.boxes)
-     ========================================================================== */
   .boxes-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -230,7 +207,6 @@
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
   }
   
-  /* Pop-out spring effect on card hover */
   .boxes:hover {
     transform: translateY(-5px);
     box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08);
@@ -240,9 +216,6 @@
   .boxes:nth-child(3) { border-bottom-color: #f59e0b; }
   .boxes:nth-child(4) { border-bottom-color: #ec4899; }
   
-  /* ==========================================================================
-     7. CLEAN, RESPONSIVE DATA TABLES
-     ========================================================================== */
   table {
     width: 100%;
     border-collapse: separate;
@@ -280,12 +253,9 @@
   }
   
   tbody tr:hover td {
-    background-color: #f8fafc; /* Lively row highlight */
+    background-color: #f8fafc; 
   }
   
-  /* ==========================================================================
-     8. STATUS MESSAGES
-     ========================================================================== */
   .statusMessageError, 
   .statusMessageValid {
     max-width: 360px;
@@ -310,9 +280,6 @@
     border: 1px solid #86efac;
   }
 
-  /* ==========================================================================
-   9. PASSWORD TOGGLE FIELD STYLES
-   ========================================================================== */
    .password-wrapper {
     position: relative;
     display: block;        
@@ -321,27 +288,25 @@
     margin: 4px auto 12px auto; 
   }
   
-  /* Forces the inner password box to match your standalone input pixel-for-pixel */
   .password-wrapper input {
     display: block !important;
     width: 100% !important;
     max-width: 360px !important;
     margin: 0 !important;   
-    padding: 10px 45px 10px 14px !important; /* Leaves room for the icon */
+    padding: 10px 45px 10px 14px !important; 
     box-sizing: border-box !important;       
   }
   
-  /* Sleek inline toggle button for the icon */
   .password-toggle-btn {
     position: absolute;
-    right: 8px; /* Slightly adjusted to accommodate the icon square */
+    right: 8px;
     top: 50%;
     transform: translateY(-50%) !important; 
     margin: 0 !important;
     background: none !important;
-    color: #6b7280 !important; /* A neutral gray to blend nicely with placeholders */
+    color: #6b7280 !important; 
     box-shadow: none !important;
-    padding: 6px !important; /* Creates a comfortable click area */
+    padding: 6px !important; 
     border-radius: 6px !important;
     display: flex !important;
     align-items: center;
